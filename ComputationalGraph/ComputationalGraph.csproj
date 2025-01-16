@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <Authors>olcaytaner</Authors>
+        <Description>Computation Graph library</Description>
+        <RepositoryUrl>https://github.com/olcaytaner/ComputationalGraph-CS</RepositoryUrl>
+        <PackageId>NlpToolkit-ComputationalGraph</PackageId>
+        <PackageVersion>1.0.0</PackageVersion>
+        <TargetFrameworks>net9.0</TargetFrameworks>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="NlpToolkit-Math" Version="1.0.7" />
+    </ItemGroup>
+
+</Project>
