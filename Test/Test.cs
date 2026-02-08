@@ -1,4 +1,5 @@
 using ComputationalGraph;
+using ComputationalGraph.Optimizer;
 using Math;
 namespace Test;
 
@@ -14,5 +15,16 @@ public class Test
         trainSet.Add(dataTensor);
         var graph = new LinearPerceptronSingleUnit();
         graph.Train(trainSet, new NeuralNetworkParameter(1, 1 , null));
+    }
+    
+    [Test]
+    public void LinearPerceptronTest()
+    {
+        var trainSet = new List<Tensor>();
+        var testSet = new List<Tensor>();
+        var graph = new LinearPerceptron();
+        graph.CreateIrisDataSet(trainSet, testSet);
+        graph.Train(trainSet, new NeuralNetworkParameter(1, 10 , new StochasticGradientDescent(0.1, 0.99)));
+        var performance = graph.Test(testSet);
     }
 }
