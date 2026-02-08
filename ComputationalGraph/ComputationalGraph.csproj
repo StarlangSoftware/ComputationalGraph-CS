@@ -7,11 +7,12 @@
         <RepositoryUrl>https://github.com/olcaytaner/ComputationalGraph-CS</RepositoryUrl>
         <PackageId>NlpToolkit-ComputationalGraph</PackageId>
         <PackageVersion>1.0.0</PackageVersion>
-        <TargetFrameworks>net9.0</TargetFrameworks>
+        <TargetFramework>net8.0</TargetFramework>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="NlpToolkit-Math" Version="1.0.7" />
+      <PackageReference Include="NlpToolkit-Classification" Version="1.0.8" />
+      <PackageReference Include="NlpToolkit-Math" Version="1.0.9" />
     </ItemGroup>
 
 </Project>
