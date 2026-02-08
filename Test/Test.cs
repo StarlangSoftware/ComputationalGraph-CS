@@ -27,4 +27,15 @@ public class Test
         graph.Train(trainSet, new NeuralNetworkParameter(1, 10 , new StochasticGradientDescent(0.1, 0.99)));
         var performance = graph.Test(testSet);
     }
+    
+    [Test]
+    public void MultiLayerPerceptronTest()
+    {
+        var trainSet = new List<Tensor>();
+        var testSet = new List<Tensor>();
+        var graph = new MultiLayerPerceptron();
+        graph.CreateIrisDataSet(trainSet, testSet);
+        graph.Train(trainSet, new NeuralNetworkParameter(1, 10 , new StochasticGradientDescent(0.1, 0.99)));
+        var performance = graph.Test(testSet);
+    }
 }

@@ -5,7 +5,7 @@ using Math;
 
 namespace Test;
 
-public class LinearPerceptron : NeuralNetwork
+public class MultiLayerPerceptron : NeuralNetwork
 {
     public override void Train(List<Tensor> trainSet, NeuralNetworkParameter parameters)
     {
@@ -13,15 +13,23 @@ public class LinearPerceptron : NeuralNetwork
         var input = new MultiplicationNode(false, true);
         InputNodes.Add(input);
         const int numberOfInputUnitsWithBiased = 5;
-        const int numberOfClasses = 3;
+        const int numberOfHiddenUnits = 6;
         var initialization = parameters.GetInitialization();
-        var initialWeights = initialization.Initialize(numberOfInputUnitsWithBiased, numberOfClasses, new Random(1));
-        int[] weightsShape = [numberOfInputUnitsWithBiased, numberOfClasses];
+        var initialWeights = initialization.Initialize(numberOfInputUnitsWithBiased, numberOfHiddenUnits, new Random(1));
+        int[] weightsShape = [numberOfInputUnitsWithBiased, numberOfHiddenUnits];
         var weightsTensor = new Tensor(initialWeights, weightsShape);
         var w = new MultiplicationNode(weightsTensor);
         var a = AddEdge(input, w, false);
+        var sigmoid = new Sigmoid();
+        var aSigmoid = AddEdge(a, sigmoid, true);
+        const int numberOfClasses = 3;
+        var initialWeights2 = initialization.Initialize(numberOfHiddenUnits + 1, numberOfClasses, new Random(1));
+        int[] weightsShape2 = [numberOfHiddenUnits + 1, numberOfClasses];
+        var weightsTensor2 = new Tensor(initialWeights2, weightsShape2);
+        var w2 = new MultiplicationNode(weightsTensor2);
+        var a2 = AddEdge(aSigmoid, w2, false);
         var softmax = new Softmax();
-        AddEdge(a, softmax, false);
+        AddEdge(a2, softmax, false);
         for (var i = 0; i < parameters.GetEpoch(); i++)
         {
             foreach (var instance in trainSet)
@@ -34,4 +42,5 @@ public class LinearPerceptron : NeuralNetwork
             }
         }
     }
+
 }
