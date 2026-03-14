@@ -1,47 +1,55 @@
+using System;
 using System.Collections.Generic;
-using Math;
+using ComputationalGraph.Node;
+using Tensor = Math.Tensor;
 
-namespace ComputationalGraph.Function;
-
-public class ReLU : Function {
-    
-    /**
-     * <summary>Computes the ReLU activation for the given tensor.</summary>
-     * <param name="value"> The tensor whose values are to be computed.</param>
-     * <returns> ReLU(x). </returns>
-     */
-    public Tensor Calculate(Tensor value)
+namespace ComputationalGraph.Function
+{
+    [Serializable]
+    public class ReLU : Function
     {
-        var values = new List<double>();
-        var oldValues = value.GetData();
-        foreach (var oldValue in oldValues) {
-            values.Add(System.Math.Max(oldValue, 0));
-        }
-        return new Tensor(values, value.GetShape());
-    }
+        public Tensor calculate(Tensor value)
+        {
+            List<double> values = new List<double>();
+            List<double> oldValues = (List<double>)value.GetData();
 
-    /**
-     * <summary>Computes the derivative of the ReLU activation function.</summary>
-     * <param name="value"> output of the ReLU(x).</param>
-     * <param name="backward"> Backward tensor.</param>
-     * <returns> Gradient value of the corresponding node.</returns>
-     */
-    public Tensor Derivative(Tensor value, Tensor backward) {
-        var values = new List<double>();
-        var oldValues = value.GetData();
-        var backwardValues = backward.GetData();
-        for (var i = 0; i < oldValues.Count; i++) {
-            var oldValue = oldValues[i];
-            var backwardValue = backwardValues[i];
-            if (oldValue > 0)
+            foreach (double oldValue in oldValues)
             {
-                values.Add(backwardValue);
+                values.Add(System.Math.Max(oldValue, 0));
             }
-            else
-            {
-                values.Add(0.0);
-            }
+
+            return new Tensor(values, value.GetShape());
         }
-        return new Tensor(values, value.GetShape());
+
+        public Tensor derivative(Tensor value, Tensor backward)
+        {
+            List<double> values = new List<double>();
+            List<double> oldValues = (List<double>)value.GetData();
+            List<double> backwardValues = (List<double>)backward.GetData();
+
+            for (int i = 0; i < oldValues.Count; i++)
+            {
+                double oldValue = oldValues[i];
+                double backwardValue = backwardValues[i];
+
+                if (oldValue > 0)
+                {
+                    values.Add(backwardValue);
+                }
+                else
+                {
+                    values.Add(0.0);
+                }
+            }
+
+            return new Tensor(values, value.GetShape());
+        }
+
+        public ComputationalNode addEdge(List<ComputationalNode> inputNodes, bool isBiased)
+        {
+            ComputationalNode newNode = new FunctionNode(isBiased, this);
+            inputNodes[0].add(newNode);
+            return newNode;
+        }
     }
 }

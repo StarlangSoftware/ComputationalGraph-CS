@@ -1,30 +1,34 @@
+using System;
 using System.Collections.Generic;
 
-namespace ComputationalGraph.Node;
-
-public class ConcatenatedNode : ComputationalNode
+namespace ComputationalGraph.Node
 {
-    private readonly Dictionary<ComputationalNode, int> _indexMap;
-    private readonly int _dimension;
-    
-    public ConcatenatedNode(int dimension) : base(false, false, null, null)
+    [Serializable]
+    public class ConcatenatedNode : ComputationalNode
     {
-        _indexMap = new Dictionary<ComputationalNode, int>();
-        _dimension = dimension;
-    }
-    
-    public int GetDimension()
-    {
-        return _dimension;
-    }
+        private readonly Dictionary<ComputationalNode, int> indexMap;
+        private readonly int dimension;
 
-    public int GetIndex(ComputationalNode node)
-    {
-        return _indexMap.ContainsKey(node) ? _indexMap[node] : -1;
-    }
+        public ConcatenatedNode(int dimension)
+            : base(false, false)
+        {
+            this.indexMap = new Dictionary<ComputationalNode, int>();
+            this.dimension = dimension;
+        }
 
-    public void AddNode(ComputationalNode node)
-    {
-        _indexMap.Add(node, _indexMap.Count);
+        public int getDimension()
+        {
+            return dimension;
+        }
+
+        public int getIndex(ComputationalNode node)
+        {
+            return indexMap[node];
+        }
+
+        public void addNode(ComputationalNode node)
+        {
+            indexMap[node] = indexMap.Count;
+        }
     }
 }

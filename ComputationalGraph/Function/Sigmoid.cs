@@ -1,41 +1,49 @@
+using System;
 using System.Collections.Generic;
-using Math;
+using ComputationalGraph.Node;
+using Tensor = Math.Tensor;
 
-namespace ComputationalGraph.Function;
+namespace ComputationalGraph.Function
+{
+    [Serializable]
+    public class Sigmoid : Function
+    {
+        public Tensor calculate(Tensor value)
+        {
+            List<double> values = new List<double>();
+            List<double> tensorValues = (List<double>)value.GetData();
 
-public class Sigmoid : Function {
-    
-    /**
-     * <summary>Computes the Sigmoid activation for the given tensor.</summary>
-     * <param name="value">The tensor whose values are to be computed.</param>
-     * <returns>Sigmoid(x).</returns>
-     */
-    public Tensor Calculate(Tensor value) {
-        var values = new List<double>();
-        var tensorValues = value.GetData();
-        foreach (var val in tensorValues) {
-            var sigmoid = 1.0 / (1.0 + System.Math.Exp(-val));
-            values.Add(sigmoid);
+            foreach (double val in tensorValues)
+            {
+                double sigmoid = 1.0 / (1.0 + System.Math.Exp(-val));
+                values.Add(sigmoid);
+            }
+
+            return new Tensor(values, value.GetShape());
         }
-        return new Tensor(values, value.GetShape());
-    }
 
-    /**
-     * <summary>Computes the derivative of the Sigmoid activation function.</summary>
-     * <param name="value">output of the Sigmoid(x).</param>
-     * <param name="backward">Backward tensor.</param>
-     * <returns>Gradient value of the corresponding node.</returns>
-     */
-    public Tensor Derivative(Tensor value, Tensor backward) {
-        var values = new List<double>();
-        var tensorValues = value.GetData();
-        var backwardValues = backward.GetData();
-        for (var i = 0; i < tensorValues.Count; i++) {
-            var val = tensorValues[i];
-            var derivative = val * (1 - val);
-            var backwardValue = backwardValues[i];
-            values.Add(derivative *  backwardValue);
+        public Tensor derivative(Tensor value, Tensor backward)
+        {
+            List<double> values = new List<double>();
+            List<double> tensorValues = (List<double>)value.GetData();
+            List<double> backwardValues = (List<double>)backward.GetData();
+
+            for (int i = 0; i < tensorValues.Count; i++)
+            {
+                double val = tensorValues[i];
+                double derivative = val * (1 - val);
+                double backwardValue = backwardValues[i];
+                values.Add(derivative * backwardValue);
+            }
+
+            return new Tensor(values, value.GetShape());
         }
-        return new Tensor(values, value.GetShape());
+
+        public virtual ComputationalNode addEdge(List<ComputationalNode> inputNodes, bool isBiased)
+        {
+            ComputationalNode newNode = new FunctionNode(isBiased, this);
+            inputNodes[0].add(newNode);
+            return newNode;
+        }
     }
 }

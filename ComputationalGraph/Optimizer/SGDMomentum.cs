@@ -1,53 +1,61 @@
+using System;
 using System.Collections.Generic;
 using ComputationalGraph.Node;
-using Math;
+using Tensor = Math.Tensor;
 
-namespace ComputationalGraph.Optimizer;
-
-public class SGDMomentum : Optimizer
+namespace ComputationalGraph.Optimizer
 {
-    protected readonly double Momentum;
-    protected readonly Dictionary<ComputationalNode, double[]> VelocityMap;
-    
-    public SGDMomentum(double learningRate, double etaDecrease, double momentum) : base(learningRate, etaDecrease)
+    [Serializable]
+    public class SGDMomentum : Optimizer
     {
-        Momentum = momentum;
-        VelocityMap = new Dictionary<ComputationalNode, double[]>();
-    }
+        protected readonly Dictionary<ComputationalNode, double[]> velocityMap;
+        protected readonly double momentum;
 
-    /**
-     * <summary>Calculates the new gradients by combining the current gradient with the previous velocity.
-     * It updates the internal velocity state and modifies the node's backward tensor
-     * to reflect the momentum-adjusted update step.</summary>
-     *
-     * <param name="node"> The node whose gradients are to be set.</param>
-     */
-    protected override void SetGradients(ComputationalNode node)
-    {
-        var backwardSize = node.GetBackward().GetData().Count;
-        var newValues = new List<double>(backwardSize);
-        for (var i = 0; i < backwardSize; i++)
+        public SGDMomentum(double learningRate, double etaDecrease, double momentum)
+            : base(learningRate, etaDecrease)
         {
-            newValues.Add((1 - Momentum) * node.GetBackward().GetData()[i]);
+            this.velocityMap = new Dictionary<ComputationalNode, double[]>();
+            this.momentum = momentum;
         }
 
-        if (VelocityMap.ContainsKey(node))
+        /// <summary>
+        /// Calculates the new gradients by combining the current gradient with the previous velocity.
+        /// It updates the internal velocity state and modifies the node's backward tensor
+        /// to reflect the momentum-adjusted update step.
+        /// </summary>
+        /// <param name="node">The node whose gradients are to be set.</param>
+        protected override void setGradients(ComputationalNode node)
         {
-            for (var i = 0; i < newValues.Count; i++)
+            int backwardSize = ((List<double>)node.getBackward().GetData()).Count;
+            List<double> newValues = new List<double>(backwardSize);
+
+            for (int i = 0; i < backwardSize; i++)
             {
-                newValues[i] += VelocityMap[node][i] * Momentum;
+                newValues.Add((1 - momentum) * ((List<double>)node.getBackward().GetData())[i]);
             }
+
+            if (velocityMap.ContainsKey(node))
+            {
+                for (int i = 0; i < newValues.Count; i++)
+                {
+                    newValues[i] = newValues[i] + (velocityMap[node][i] * momentum);
+                }
+            }
+
+            double[] velocity = new double[backwardSize];
+            for (int i = 0; i < backwardSize; i++)
+            {
+                velocity[i] = newValues[i];
+            }
+
+            velocityMap[node] = velocity;
+
+            for (int i = 0; i < newValues.Count; i++)
+            {
+                newValues[i] = newValues[i] * learningRate;
+            }
+
+            node.setBackward(new Tensor(newValues, node.getBackward().GetShape()));
         }
-        var velocity = new double[backwardSize];
-        for (var i = 0; i < backwardSize; i++)
-        {
-            velocity[i] = newValues[i];
-        }
-        VelocityMap[node] = velocity;
-        for (var i = 0; i < newValues.Count; i++)
-        {
-            newValues[i] *= LearningRate;
-        }
-        node.SetBackward(new Tensor(newValues, node.GetBackward().GetShape()));
     }
 }

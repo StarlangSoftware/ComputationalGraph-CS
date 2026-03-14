@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "dgSpecHash": "Ky6NhHGkG9A=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\ASUS\\RiderProjects\\ComputationalGraph-CS\\ComputationalGraph\\ComputationalGraph.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\ASUS\\.nuget\\packages\\nlptoolkit-classification\\1.0.8\\nlptoolkit-classification.1.0.8.nupkg.sha512",
+    "C:\\Users\\ASUS\\.nuget\\packages\\nlptoolkit-datastructure\\1.0.6\\nlptoolkit-datastructure.1.0.6.nupkg.sha512",
+    "C:\\Users\\ASUS\\.nuget\\packages\\nlptoolkit-math\\1.0.9\\nlptoolkit-math.1.0.9.nupkg.sha512",
+    "C:\\Users\\ASUS\\.nuget\\packages\\nlptoolkit-sampling\\1.0.4\\nlptoolkit-sampling.1.0.4.nupkg.sha512",
+    "C:\\Users\\ASUS\\.nuget\\packages\\nlptoolkit-util\\1.0.8\\nlptoolkit-util.1.0.8.nupkg.sha512"
+  ],
+  "logs": []
+}

@@ -1,0 +1,13 @@
+C:\Users\ASUS\RiderProjects\ComputationalGraph-CS\ComputationalGraph\bin\Debug\net8.0\ComputationalGraph.deps.json
+C:\Users\ASUS\RiderProjects\ComputationalGraph-CS\ComputationalGraph\bin\Debug\net8.0\ComputationalGraph.dll
+C:\Users\ASUS\RiderProjects\ComputationalGraph-CS\ComputationalGraph\bin\Debug\net8.0\ComputationalGraph.pdb
+C:\Users\ASUS\RiderProjects\ComputationalGraph-CS\ComputationalGraph\obj\Debug\net8.0\ComputationalGraph.csproj.AssemblyReference.cache
+C:\Users\ASUS\RiderProjects\ComputationalGraph-CS\ComputationalGraph\obj\Debug\net8.0\ComputationalGraph.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\ASUS\RiderProjects\ComputationalGraph-CS\ComputationalGraph\obj\Debug\net8.0\ComputationalGraph.AssemblyInfoInputs.cache
+C:\Users\ASUS\RiderProjects\ComputationalGraph-CS\ComputationalGraph\obj\Debug\net8.0\ComputationalGraph.AssemblyInfo.cs
+C:\Users\ASUS\RiderProjects\ComputationalGraph-CS\ComputationalGraph\obj\Debug\net8.0\ComputationalGraph.csproj.CoreCompileInputs.cache
+C:\Users\ASUS\RiderProjects\ComputationalGraph-CS\ComputationalGraph\obj\Debug\net8.0\ComputationalGraph.sourcelink.json
+C:\Users\ASUS\RiderProjects\ComputationalGraph-CS\ComputationalGraph\obj\Debug\net8.0\ComputationalGraph.dll
+C:\Users\ASUS\RiderProjects\ComputationalGraph-CS\ComputationalGraph\obj\Debug\net8.0\refint\ComputationalGraph.dll
+C:\Users\ASUS\RiderProjects\ComputationalGraph-CS\ComputationalGraph\obj\Debug\net8.0\ComputationalGraph.pdb
+C:\Users\ASUS\RiderProjects\ComputationalGraph-CS\ComputationalGraph\obj\Debug\net8.0\ref\ComputationalGraph.dll

@@ -1,62 +1,73 @@
+using System;
 using System.Collections.Generic;
-using Math;
+using ComputationalGraph.Node;
+using Tensor = Math.Tensor;
 
-namespace ComputationalGraph.Function;
-
-public class Softmax : Function {
-    
-    /**
-     * <summary>Computes the Softmax activation for the given tensor.</summary>
-     * <param name="tensor">The tensor whose values are to be computed.</param>
-     * <returns>Softmax(x).</returns>
-     */
-    public Tensor Calculate(Tensor tensor) {
-        var values = new List<double>();
-        var oldValues = tensor.GetData();
-        var lastDimensionSize = tensor.GetShape()[tensor.GetShape().Length - 1];
-        var sum = 0.0;
-        var sumList = new List<double>();
-        for (var i =  0; i < oldValues.Count; i++) {
-            sum += System.Math.Exp(oldValues[i]);
-            if ((i + 1) % lastDimensionSize == 0)
-            {
-                sumList.Add(sum);
-                sum = 0.0;
-            }
-        }
-        for (int i = 0; i < oldValues.Count; i++)
-        {
-            values.Add(System.Math.Exp(oldValues[i]) / sumList[i / lastDimensionSize]);
-        }
-        return new Tensor(values, tensor.GetShape());
-    }
-
-    /**
-     * <summary>Computes the derivative of the Softmax activation function.</summary>
-     * <param name="value">output of the Softmax(x).</param>
-     * <param name="backward">Backward tensor.</param>
-     * <returns>Gradient value of the corresponding node.</returns>
-     */
-    public Tensor Derivative(Tensor value, Tensor backward)
+namespace ComputationalGraph.Function
+{
+    [Serializable]
+    public class Softmax : Function
     {
-        var lastDimensionSize = value.GetShape()[value.GetShape().Length - 1];
-        var values = new List<double>();
-        var oldValuesTensor = value.GetData();
-        var oldValuesBackward = backward.GetData();
-        var total = 0.0;
-        for (var i = 0; i < oldValuesTensor.Count; i++)
+        public Tensor calculate(Tensor tensor)
         {
-            total += oldValuesTensor[i] * oldValuesBackward[i];
-            if ((i + 1) % lastDimensionSize == 0)
+            List<double> values = new List<double>();
+            List<double> oldValues = (List<double>)tensor.GetData();
+
+            int lastDimensionSize = tensor.GetShape()[tensor.GetShape().Length - 1];
+            double sum = 0.0;
+            List<double> sumList = new List<double>();
+
+            for (int i = 0; i < oldValues.Count; i++)
             {
-                var startIndex = i / lastDimensionSize;
-                for (var j = 0; j < lastDimensionSize; j++)
+                sum += System.Math.Exp(oldValues[i]);
+                if ((i + 1) % lastDimensionSize == 0)
                 {
-                    values.Add(oldValuesBackward[startIndex * lastDimensionSize + j] - total);
+                    sumList.Add(sum);
+                    sum = 0.0;
                 }
-                total = 0.0;
             }
+
+            for (int i = 0; i < oldValues.Count; i++)
+            {
+                values.Add(System.Math.Exp(oldValues[i]) / sumList[i / lastDimensionSize]);
+            }
+
+            return new Tensor(values, tensor.GetShape());
         }
-        return value.HadamardProduct(new Tensor(values, value.GetShape()));
+
+        public Tensor derivative(Tensor tensor, Tensor backward)
+        {
+            int lastDimensionSize = tensor.GetShape()[tensor.GetShape().Length - 1];
+
+            List<double> values = new List<double>();
+            List<double> oldValuesTensor = (List<double>)tensor.GetData();
+            List<double> oldValuesBackward = (List<double>)backward.GetData();
+
+            double total = 0.0;
+
+            for (int i = 0; i < oldValuesTensor.Count; i++)
+            {
+                total += oldValuesTensor[i] * oldValuesBackward[i];
+
+                if ((i + 1) % lastDimensionSize == 0)
+                {
+                    int startIndex = i / lastDimensionSize;
+                    for (int j = 0; j < lastDimensionSize; j++)
+                    {
+                        values.Add(oldValuesBackward[startIndex * lastDimensionSize + j] - total);
+                    }
+                    total = 0.0;
+                }
+            }
+
+            return tensor.HadamardProduct(new Tensor(values, tensor.GetShape()));
+        }
+
+        public ComputationalNode addEdge(List<ComputationalNode> inputNodes, bool isBiased)
+        {
+            ComputationalNode newNode = new FunctionNode(isBiased, this);
+            inputNodes[0].add(newNode);
+            return newNode;
+        }
     }
 }

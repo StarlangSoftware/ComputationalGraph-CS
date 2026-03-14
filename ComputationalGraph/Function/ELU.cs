@@ -1,66 +1,85 @@
+using System;
 using System.Collections.Generic;
-using Math;
+using ComputationalGraph.Node;
+using Tensor = Math.Tensor;
 
-namespace ComputationalGraph.Function;
-
-public class ELU : Function
+namespace ComputationalGraph.Function
 {
-    private readonly double _a;
+    [Serializable]
+    public class ELU : Function
+    {
+        private readonly double a;
 
-    public ELU(double a)
-    {
-        _a = a;
-    }
-
-    public ELU()
-    {
-        _a = 1.0;
-    }
-    
-    /**
-     * <summary> Computes the ELU activation for the given value tensor.</summary>
-     * <param name="value">The tensor whose values are to be computed.</param>
-     * <returns>ELU(x).</returns>
-     */
-    public Tensor Calculate(Tensor value)
-    {
-        var values = new List<double>();
-        var oldValues = value.GetData();
-        foreach (var oldValue in oldValues) {
-            if (oldValue < 0)
-            {
-                values.Add(_a * (System.Math.Exp(oldValue) - 1));
-            }
-            else
-            {
-                values.Add(oldValue);
-            }
+        public ELU(double a)
+        {
+            this.a = a;
         }
-        return new Tensor(values, value.GetShape());
-    }
 
-    /**
-     * <summary>Computes the derivative of the ELU activation function.</summary>
-     * <param name="value">output of the ELU(x).</param>
-     * <param name="backward">Backward tensor.</param>
-     * <returns>Gradient value of the corresponding node.</returns>
-     */
-    public Tensor Derivative(Tensor value, Tensor backward)
-    {
-        var values = new List<double>();
-        var oldValues = value.GetData();
-        var backwardValues = backward.GetData();
-        for (var i = 0; i < oldValues.Count; i++) {
-            var oldValue = oldValues[i];
-            var backwardValue = backwardValues[i];
-            if (oldValue < 0)
-            {
-                values.Add((oldValue + _a) * backwardValue);
-            }
-            else
-            {
-                values.Add(backwardValue);
-            }
+        public ELU()
+        {
+            this.a = 1.0;
         }
-        return new Tensor(values, value.GetShape());
-    }}
+
+        /// <summary>
+        /// Computes the ELU activation for the given tensor.
+        /// </summary>
+        /// <param name="value">The tensor whose values are to be computed.</param>
+        /// <returns>ELU(x).</returns>
+        public Tensor calculate(Tensor value)
+        {
+            List<double> values = new List<double>();
+            List<double> oldValues = (List<double>)value.GetData();
+
+            foreach (double oldValue in oldValues)
+            {
+                if (oldValue < 0)
+                {
+                    values.Add(a * (System.Math.Exp(oldValue) - 1));
+                }
+                else
+                {
+                    values.Add(oldValue);
+                }
+            }
+
+            return new Tensor(values, value.GetShape());
+        }
+
+        /// <summary>
+        /// Computes the derivative of the ELU activation function.
+        /// </summary>
+        /// <param name="value">output of the ELU(x).</param>
+        /// <param name="backward">Backward tensor.</param>
+        /// <returns>Gradient value of the corresponding node.</returns>
+        public Tensor derivative(Tensor value, Tensor backward)
+        {
+            List<double> values = new List<double>();
+            List<double> oldValues = (List<double>)value.GetData();
+            List<double> backwardValues = (List<double>)backward.GetData();
+
+            for (int i = 0; i < oldValues.Count; i++)
+            {
+                double oldValue = oldValues[i];
+                double backwardValue = backwardValues[i];
+
+                if (oldValue < 0)
+                {
+                    values.Add((oldValue + a) * backwardValue);
+                }
+                else
+                {
+                    values.Add(backwardValue);
+                }
+            }
+
+            return new Tensor(values, value.GetShape());
+        }
+
+        public ComputationalNode addEdge(List<ComputationalNode> inputNodes, bool isBiased)
+        {
+            ComputationalNode newNode = new FunctionNode(isBiased, this);
+            inputNodes[0].add(newNode);
+            return newNode;
+        }
+    }
+}

@@ -1,27 +1,33 @@
+using System;
 using System.Collections.Generic;
 using ComputationalGraph.Node;
-using Math;
+using Tensor = Math.Tensor;
 
-namespace ComputationalGraph.Optimizer;
-
-public class StochasticGradientDescent : Optimizer
+namespace ComputationalGraph.Optimizer
 {
-    public StochasticGradientDescent(double learningRate, double etaDecrease) : base(learningRate, etaDecrease)
+    [Serializable]
+    public class StochasticGradientDescent : Optimizer
     {
-    }
-
-    /**
-     * <summary>Sets the gradients (backward values) of the node to the learning rate times the backward values.</summary>
-     * <param name="node">The node whose gradients are to be set.</param>
-     */
-    protected override void SetGradients(ComputationalNode node)
-    {
-        var values = new List<double>();
-        var backward = node.GetBackward().GetData();
-        foreach (var aDouble in backward)
+        public StochasticGradientDescent(double learningRate, double etaDecrease)
+            : base(learningRate, etaDecrease)
         {
-            values.Add(aDouble * LearningRate);
         }
-        node.SetBackward(new Tensor(values, node.GetBackward().GetShape()));
+
+        /// <summary>
+        /// Sets the gradients (backward values) of the node to the learning rate times the backward values.
+        /// </summary>
+        /// <param name="node">The node whose gradients are to be set.</param>
+        protected override void setGradients(ComputationalNode node)
+        {
+            List<double> values = new List<double>();
+            List<double> backward = (List<double>)node.getBackward().GetData();
+
+            foreach (double item in backward)
+            {
+                values.Add(item * this.learningRate);
+            }
+
+            node.setBackward(new Tensor(values, node.getBackward().GetShape()));
+        }
     }
 }

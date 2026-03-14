@@ -1,29 +1,36 @@
+using System;
+using System.Collections.Generic;
 using ComputationalGraph.Node;
-using Math;
+using Tensor = Math.Tensor;
 
-namespace ComputationalGraph.Optimizer;
-
-public class AdamW : Adam
+namespace ComputationalGraph.Optimizer
 {
-    private readonly double _weightDecay;
-    
-    public AdamW(double learningRate, double etaDecrease, double beta1, double beta2, double epsilon, double weightDecay) : base(learningRate, etaDecrease, beta1, beta2, epsilon)
+    [Serializable]
+    public class AdamW : Adam
     {
-        _weightDecay = weightDecay;
-    }
+        private readonly double weightDecay;
 
-    /**
-     * <summary>Sets the gradients for the given node using the AdamW optimization algorithm.</summary>
-     * <param name="node"> The node whose gradients are to be set.</param>
-     */
-    protected override void SetGradients(ComputationalNode node)
-    {
-        var gradients = Calculate(node);
-        var values = node.GetValue().GetData();
-        for (var i = 0; i < gradients.Count; i++)
+        public AdamW(double learningRate, double etaDecrease, double beta1, double beta2, double epsilon, double weightDecay)
+            : base(learningRate, etaDecrease, beta1, beta2, epsilon)
         {
-            gradients[i] += LearningRate * _weightDecay * values[i];
+            this.weightDecay = weightDecay;
         }
-        node.SetBackward(new Tensor(gradients, node.GetBackward().GetShape()));
+
+        /// <summary>
+        /// Sets the gradients for the given node using the AdamW optimization algorithm.
+        /// </summary>
+        /// <param name="node">The node whose gradients are to be set.</param>
+        protected override void setGradients(ComputationalNode node)
+        {
+            List<double> gradients = calculate(node);
+            List<double> values = (List<double>)node.getValue().GetData();
+
+            for (int i = 0; i < gradients.Count; i++)
+            {
+                gradients[i] = gradients[i] + (learningRate * weightDecay * values[i]);
+            }
+
+            node.setBackward(new Tensor(gradients, node.getBackward().GetShape()));
+        }
     }
 }

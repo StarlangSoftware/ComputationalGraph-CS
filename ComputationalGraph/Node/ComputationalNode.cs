@@ -1,73 +1,139 @@
-using Math;
+using System;
+using System.Collections.Generic;
+using Tensor = Math.Tensor;
 
-namespace ComputationalGraph.Node;
-
-public class ComputationalNode {
-    
-    protected Tensor Value;
-    protected Tensor Backward;
-    protected readonly bool _isLearnable;
-    protected readonly bool _isBiased;
-    protected readonly Function.Function Function;
-
-    /**
-     * <summary>Initializes a ComputationalNode.</summary>
-     * <param name="learnable"> Indicates whether the node is learnable (e.g., weights)</param>
-     * <param name="isBiased"> Indicates whether the node is biased</param>
-     * <param name="function"> The function (e.g., activation like SIGMOID)</param>
-     * <param name="value"> The tensor value associated with the node (optional)</param>
-     */
-    public ComputationalNode(bool learnable, bool isBiased, Function.Function function, Tensor value) {
-        _isLearnable = learnable;
-        Backward = null;
-        Value = value;
-        _isBiased = isBiased;
-        Function = function;
-    }
-
-    /**
-     * Constructor overload for function type initialization
-     * <param name="learnable"> Indicates whether the node is learnable (e.g., weights)</param>
-     * <param name="isBiased"> Indicates whether the node is biased</param>
-     * <param name="function"> The function (e.g., activation like SIGMOID)</param>
-     */
-    public ComputationalNode(bool learnable, Function.Function function, bool isBiased) : this(learnable, isBiased, function, null) {
-    }
-
-    public ComputationalNode(bool learnable, bool isBiased) : this(learnable, isBiased, null, null) {
-    }
-
-    public bool IsBiased()
+namespace ComputationalGraph.Node
+{
+    [Serializable]
+    public class ComputationalNode
     {
-        return _isBiased;
-    }
+        protected Tensor value;
+        protected Tensor backward;
+        protected readonly bool isBiased;
+        protected readonly bool learnable;
+        private readonly List<ComputationalNode> children;
+        private readonly List<ComputationalNode> parents;
 
-    public Function.Function GetFunction()
-    {
-        return Function;
-    }
-    
-    public Tensor GetValue() {
-        return Value;
-    }
+        public ComputationalNode(bool learnable, bool isBiased, Tensor value)
+        {
+            this.value = value;
+            this.backward = null;
+            this.isBiased = isBiased;
+            this.learnable = learnable;
+            children = new List<ComputationalNode>();
+            parents = new List<ComputationalNode>();
+        }
 
-    public void SetValue(Tensor value) {
-        Value = value;
-    }
+        public ComputationalNode(bool learnable, bool isBiased)
+            : this(learnable, isBiased, null)
+        {
+        }
 
-    public void UpdateValue() {
-        Value.Add(Backward);
-    }
-    
-    public bool IsLearnable() {
-        return _isLearnable;
-    }
+        public ComputationalNode()
+            : this(false, false)
+        {
+        }
 
-    public Tensor GetBackward() {
-        return Backward;
-    }
+        public ComputationalNode getChild(int index)
+        {
+            return children[index];
+        }
 
-    public void SetBackward(Tensor backward) {
-        Backward = backward;
+        public void addChild(ComputationalNode child)
+        {
+            children.Add(child);
+        }
+
+        public void addParent(ComputationalNode parent)
+        {
+            parents.Add(parent);
+        }
+
+        public void add(ComputationalNode child)
+        {
+            children.Add(child);
+            child.addParent(this);
+        }
+
+        public ComputationalNode getParent(int index)
+        {
+            return parents[index];
+        }
+
+        public int childrenSize()
+        {
+            return children.Count;
+        }
+
+        public int parentsSize()
+        {
+            return parents.Count;
+        }
+
+        public bool isLearnable()
+        {
+            return learnable;
+        }
+
+        public override string ToString()
+        {
+            string details = "";
+
+            if (value != null)
+            {
+                if (details.Length > 0)
+                {
+                    details += ", ";
+                }
+
+                details += "Value Shape: [" + value.GetShape()[0];
+                for (int i = 1; i < value.GetShape().Length; i++)
+                {
+                    details += ", " + value.GetShape()[i];
+                }
+
+                details += "]";
+            }
+
+            if (details.Length > 0)
+            {
+                details += ", ";
+            }
+
+            details += "is learnable: " + learnable;
+            details += ", is biased: " + isBiased;
+
+            return "Node(" + details + ")";
+        }
+
+        public bool isBiasedNode()
+        {
+            return isBiased;
+        }
+
+        public Tensor getValue()
+        {
+            return value;
+        }
+
+        public void setValue(Tensor value)
+        {
+            this.value = value;
+        }
+
+        public void updateValue()
+        {
+            value.Add(backward);
+        }
+
+        public Tensor getBackward()
+        {
+            return backward;
+        }
+
+        public void setBackward(Tensor backward)
+        {
+            this.backward = backward;
+        }
     }
 }
