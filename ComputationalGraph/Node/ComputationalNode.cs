@@ -206,7 +206,12 @@ namespace ComputationalGraph.Node
          */
         public void UpdateValue()
         {
-            Value.Add(Backward);
+            if (Value == null || Backward == null)
+            {
+                return;
+            }
+
+            Value = Value.Add(Backward);
         }
 
         /**

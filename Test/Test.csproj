@@ -26,4 +26,10 @@
       <ProjectReference Include="..\ComputationalGraph\ComputationalGraph.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="iris.txt">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
 </Project>

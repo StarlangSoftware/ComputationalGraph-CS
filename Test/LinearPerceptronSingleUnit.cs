@@ -1,42 +1,87 @@
+using System;
+using System.Collections.Generic;
 using Classification.Performance;
 using ComputationalGraph;
 using ComputationalGraph.Function;
 using ComputationalGraph.Node;
-using ComputationalGraph.Optimizer;
 using Math;
 
-namespace Test;
-
-public class LinearPerceptronSingleUnit : NeuralNetwork
+namespace Test
 {
-    protected override List<int> GetClassLabels(ComputationalNode outputNode)
+    [Serializable]
+    public class LinearPerceptronSingleInput : ComputationalGraph.ComputationalGraph
     {
-        List<int> labels = [0];
-        return labels;
-    }
+        /**
+         * <summary>Creates a linear perceptron with a single input configuration.</summary>
+         *
+         * <param name="parameters">Neural network parameters.</param>
+         */
+        public LinearPerceptronSingleInput(NeuralNetworkParameter parameters)
+            : base(parameters)
+        {
+        }
 
-    public override void Train(List<Tensor> trainSet, NeuralNetworkParameter parameters)
-    {
-        var optimizer = new StochasticGradientDescent(0.1, 0.99);
-        var input = new MultiplicationNode(false, true);
-        InputNodes.Add(input);
-        List<double> initialWeights = [1.0, 1.0, 1.0, 1.0];
-        int[] weightsShape = [2, 2];
-        var weightsTensor = new Tensor(initialWeights, weightsShape);
-        var w = new MultiplicationNode(weightsTensor);
-        var a = AddEdge(input, w, false);
-        var softmax = new Softmax();
-        var outputNode = AddEdge(a, softmax, false);
-        var dataTensor = trainSet[0];
-        var input1 = CreateInputTensor(dataTensor);
-        input.SetValue(input1);
-        var calculatedClassLabels = ForwardCalculation(false);
-        List<int> classes = [1];
-        Backpropagation(optimizer, classes);
-    }
+        /**
+         * <summary>Creates the input tensor from the given instance by excluding the class label.</summary>
+         *
+         * <param name="instance">Input instance tensor.</param>
+         * <returns>Input tensor without the class label.</returns>
+         */
+        private Tensor CreateInputTensor(Tensor instance)
+        {
+            var data = new List<double>();
 
-    public override ClassificationPerformance Test(List<Tensor> testSet)
-    {
-        return new ClassificationPerformance(1.0);
+            for (var i = 0; i < instance.GetShape()[0] - 1; i++)
+            {
+                data.Add(instance.GetValue(new[] { i }));
+            }
+
+            return new Tensor(data, new[] { 1, instance.GetShape()[0] - 1 });
+        }
+
+        /**
+         * <summary>Trains the linear perceptron model.</summary>
+         *
+         * <param name="trainSet">Training set.</param>
+         */
+        public override void Train(List<Tensor> trainSet)
+        {
+            var input = new MultiplicationNode(false, true, false);
+            InputNodes.Add(input);
+
+            var weightsTensor = new Tensor(new List<double> { 1.0, 1.0, 1.0, 1.0 }, new[] { 2, 2 });
+            var weightsNode = new MultiplicationNode(weightsTensor);
+
+            var activationNode = AddEdge(input, weightsNode, false);
+            OutputNode = AddEdge(activationNode, new Softmax(), false);
+
+            var dataTensor = new Tensor(new List<double> { 1.0, 1.0 }, new[] { 2 });
+            input.SetValue(CreateInputTensor(dataTensor));
+
+            ForwardCalculation();
+            Backpropagation();
+        }
+
+        /**
+         * <summary>Tests the linear perceptron model.</summary>
+         *
+         * <param name="testSet">Test set.</param>
+         * <returns>Classification performance of the model.</returns>
+         */
+        public override ClassificationPerformance Test(List<Tensor> testSet)
+        {
+            return null;
+        }
+
+        /**
+         * <summary>Returns the output values of the given output node.</summary>
+         *
+         * <param name="outputNode">Output node of the graph.</param>
+         * <returns>Output values of the node.</returns>
+         */
+        protected override List<double> GetOutputValue(ComputationalNode outputNode)
+        {
+            return null;
+        }
     }
 }
