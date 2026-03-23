@@ -7,23 +7,18 @@ namespace ComputationalGraph.Initialization
     public class RandomInitialization : Initialization
     {
         /**
-         * <summary>Random Uniform Initialization.
-         * <p>
-         * This method initializes the weights with small random values uniformly distributed
-         * between -0.01 and 0.01. This is a basic initialization strategy used to break
-         * symmetry between neurons.
-         * </p></summary>
+         * <summary>Initializes weights with small uniformly distributed random values.</summary>
          *
-         * <param name="row">    The number of rows in the matrix.</param>
-         * <param name="column"> The number of columns in the matrix.</param>
-         * <param name="random"> The {@link Random} instance used for generating values.</param>
-         * <returns> An {@link ArrayList} containing the initialized weight values.</returns>
+         * <param name="row">The number of rows in the matrix.</param>
+         * <param name="column">The number of columns in the matrix.</param>
+         * <param name="random">Random object used for generating values.</param>
+         * <returns>A list of initialized weight values.</returns>
          */
         public List<double> Initialize(int row, int column, Random random)
         {
-            List<double> data = new List<double>();
+            var data = new List<double>();
 
-            for (int i = 0; i < row * column; i++)
+            for (var i = 0; i < row * column; i++)
             {
                 data.Add(-0.01 + (0.02 * random.NextDouble()));
             }

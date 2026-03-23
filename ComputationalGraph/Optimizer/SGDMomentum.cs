@@ -8,54 +8,60 @@ namespace ComputationalGraph.Optimizer
     [Serializable]
     public class SGDMomentum : Optimizer
     {
-        protected readonly Dictionary<ComputationalNode, double[]> velocityMap;
-        protected readonly double momentum;
+        protected readonly Dictionary<ComputationalNode, double[]> VelocityMap;
+        protected readonly double Momentum;
 
+        /**
+         * <summary>Creates an SGD optimizer with momentum.</summary>
+         *
+         * <param name="learningRate">Initial learning rate.</param>
+         * <param name="etaDecrease">Learning rate decay factor.</param>
+         * <param name="momentum">Momentum coefficient.</param>
+         */
         public SGDMomentum(double learningRate, double etaDecrease, double momentum)
             : base(learningRate, etaDecrease)
         {
-            this.velocityMap = new Dictionary<ComputationalNode, double[]>();
-            this.momentum = momentum;
+            VelocityMap = new Dictionary<ComputationalNode, double[]>();
+            Momentum = momentum;
         }
 
-        /// <summary>
-        /// Calculates the new gradients by combining the current gradient with the previous velocity.
-        /// It updates the internal velocity state and modifies the node's backward tensor
-        /// to reflect the momentum-adjusted update step.
-        /// </summary>
-        /// <param name="node">The node whose gradients are to be set.</param>
-        protected override void setGradients(ComputationalNode node)
+        /**
+         * <summary>Calculates momentum-adjusted gradients for the given node.</summary>
+         *
+         * <param name="node">The node whose gradients are to be set.</param>
+         */
+        protected override void SetGradients(ComputationalNode node)
         {
-            int backwardSize = ((List<double>)node.getBackward().GetData()).Count;
-            List<double> newValues = new List<double>(backwardSize);
+            var backwardSize = ((List<double>)node.GetBackward().GetData()).Count;
+            var newValues = new List<double>(backwardSize);
 
-            for (int i = 0; i < backwardSize; i++)
+            for (var i = 0; i < backwardSize; i++)
             {
-                newValues.Add((1 - momentum) * ((List<double>)node.getBackward().GetData())[i]);
+                newValues.Add((1 - Momentum) * ((List<double>)node.GetBackward().GetData())[i]);
             }
 
-            if (velocityMap.ContainsKey(node))
+            if (VelocityMap.ContainsKey(node))
             {
-                for (int i = 0; i < newValues.Count; i++)
+                for (var i = 0; i < newValues.Count; i++)
                 {
-                    newValues[i] = newValues[i] + (velocityMap[node][i] * momentum);
+                    newValues[i] = newValues[i] + (VelocityMap[node][i] * Momentum);
                 }
             }
 
-            double[] velocity = new double[backwardSize];
-            for (int i = 0; i < backwardSize; i++)
+            var velocity = new double[backwardSize];
+            for (var i = 0; i < backwardSize; i++)
             {
                 velocity[i] = newValues[i];
             }
 
-            velocityMap[node] = velocity;
+            VelocityMap[node] = velocity;
 
-            for (int i = 0; i < newValues.Count; i++)
+            for (var i = 0; i < newValues.Count; i++)
             {
-                newValues[i] = newValues[i] * learningRate;
+                newValues[i] = newValues[i] * LearningRate;
             }
 
-            node.setBackward(new Tensor(newValues, node.getBackward().GetShape()));
+            node.SetBackward(new Tensor(newValues, node.GetBackward().GetShape()));
         }
     }
 }

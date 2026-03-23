@@ -8,52 +8,80 @@ namespace ComputationalGraph.Function
     [Serializable]
     public class Power : Function
     {
-        private readonly int n;
+        private readonly int _n;
 
+        /**
+         * <summary>Creates a power function with the given exponent.</summary>
+         *
+         * <param name="n">Exponent of the power function.</param>
+         */
         public Power(int n)
         {
-            this.n = n;
+            _n = n;
         }
 
+        /**
+         * <summary>Creates a power function with the default exponent.</summary>
+         */
         public Power()
         {
-            this.n = 2;
+            _n = 2;
         }
 
-        public Tensor calculate(Tensor value)
+        /**
+         * <summary>Raises each element of the tensor to the specified power.</summary>
+         *
+         * <param name="value">Input tensor.</param>
+         * <returns>A tensor whose elements are raised to the specified power.</returns>
+         */
+        public Tensor Calculate(Tensor value)
         {
-            List<double> values = new List<double>();
-            List<double> tensorValues = (List<double>)value.GetData();
+            var values = new List<double>();
+            var tensorValues = (List<double>)value.GetData();
 
-            foreach (double val in tensorValues)
+            foreach (var val in tensorValues)
             {
-                values.Add(System.Math.Pow(val, n));
+                values.Add(System.Math.Pow(val, _n));
             }
 
             return new Tensor(values, value.GetShape());
         }
 
-        public Tensor derivative(Tensor value, Tensor backward)
+        /**
+         * <summary>Computes the derivative of the power function.</summary>
+         *
+         * <param name="value">Output of the power function.</param>
+         * <param name="backward">Backward tensor.</param>
+         * <returns>Gradient value of the corresponding node.</returns>
+         */
+        public Tensor Derivative(Tensor value, Tensor backward)
         {
-            List<double> values = new List<double>();
-            List<double> tensorValues = (List<double>)value.GetData();
-            List<double> backwardValues = (List<double>)backward.GetData();
+            var values = new List<double>();
+            var tensorValues = (List<double>)value.GetData();
+            var backwardValues = (List<double>)backward.GetData();
 
-            for (int i = 0; i < tensorValues.Count; i++)
+            for (var i = 0; i < tensorValues.Count; i++)
             {
-                double val = tensorValues[i];
-                double derivative = n * System.Math.Pow(System.Math.Pow(val, 1.0 / n), n - 1);
-                double backwardValue = backwardValues[i];
+                var val = tensorValues[i];
+                var derivative = _n * System.Math.Pow(System.Math.Pow(val, 1.0 / _n), _n - 1);
+                var backwardValue = backwardValues[i];
                 values.Add(derivative * backwardValue);
             }
 
             return new Tensor(values, value.GetShape());
         }
 
-        public ComputationalNode addEdge(List<ComputationalNode> inputNodes, bool isBiased)
+        /**
+         * <summary>Adds a power function edge to the computational graph.</summary>
+         *
+         * <param name="inputNodes">Input nodes of the function.</param>
+         * <param name="isBiased">Indicates whether the created node is biased.</param>
+         * <returns>The created computational node.</returns>
+         */
+        public ComputationalNode AddEdge(List<ComputationalNode> inputNodes, bool isBiased)
         {
-            ComputationalNode newNode = new FunctionNode(isBiased, this);
-            inputNodes[0].add(newNode);
+            var newNode = new FunctionNode(isBiased, this);
+            inputNodes[0].Add(newNode);
             return newNode;
         }
     }

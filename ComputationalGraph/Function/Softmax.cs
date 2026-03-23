@@ -8,16 +8,22 @@ namespace ComputationalGraph.Function
     [Serializable]
     public class Softmax : Function
     {
-        public Tensor calculate(Tensor tensor)
+        /**
+         * <summary>Computes the softmax activation for the given tensor.</summary>
+         *
+         * <param name="tensor">The tensor whose values are to be normalized.</param>
+         * <returns>Softmax output tensor.</returns>
+         */
+        public Tensor Calculate(Tensor tensor)
         {
-            List<double> values = new List<double>();
-            List<double> oldValues = (List<double>)tensor.GetData();
+            var values = new List<double>();
+            var oldValues = (List<double>)tensor.GetData();
 
-            int lastDimensionSize = tensor.GetShape()[tensor.GetShape().Length - 1];
-            double sum = 0.0;
-            List<double> sumList = new List<double>();
+            var lastDimensionSize = tensor.GetShape()[tensor.GetShape().Length - 1];
+            var sum = 0.0;
+            var sumList = new List<double>();
 
-            for (int i = 0; i < oldValues.Count; i++)
+            for (var i = 0; i < oldValues.Count; i++)
             {
                 sum += System.Math.Exp(oldValues[i]);
                 if ((i + 1) % lastDimensionSize == 0)
@@ -27,7 +33,7 @@ namespace ComputationalGraph.Function
                 }
             }
 
-            for (int i = 0; i < oldValues.Count; i++)
+            for (var i = 0; i < oldValues.Count; i++)
             {
                 values.Add(System.Math.Exp(oldValues[i]) / sumList[i / lastDimensionSize]);
             }
@@ -35,27 +41,35 @@ namespace ComputationalGraph.Function
             return new Tensor(values, tensor.GetShape());
         }
 
-        public Tensor derivative(Tensor tensor, Tensor backward)
+        /**
+         * <summary>Computes the derivative of the softmax function.</summary>
+         *
+         * <param name="tensor">Output of the softmax function.</param>
+         * <param name="backward">Backward tensor.</param>
+         * <returns>Gradient value of the corresponding node.</returns>
+         */
+        public Tensor Derivative(Tensor tensor, Tensor backward)
         {
-            int lastDimensionSize = tensor.GetShape()[tensor.GetShape().Length - 1];
+            var lastDimensionSize = tensor.GetShape()[tensor.GetShape().Length - 1];
 
-            List<double> values = new List<double>();
-            List<double> oldValuesTensor = (List<double>)tensor.GetData();
-            List<double> oldValuesBackward = (List<double>)backward.GetData();
+            var values = new List<double>();
+            var oldValuesTensor = (List<double>)tensor.GetData();
+            var oldValuesBackward = (List<double>)backward.GetData();
 
-            double total = 0.0;
+            var total = 0.0;
 
-            for (int i = 0; i < oldValuesTensor.Count; i++)
+            for (var i = 0; i < oldValuesTensor.Count; i++)
             {
                 total += oldValuesTensor[i] * oldValuesBackward[i];
 
                 if ((i + 1) % lastDimensionSize == 0)
                 {
-                    int startIndex = i / lastDimensionSize;
-                    for (int j = 0; j < lastDimensionSize; j++)
+                    var startIndex = i / lastDimensionSize;
+                    for (var j = 0; j < lastDimensionSize; j++)
                     {
                         values.Add(oldValuesBackward[startIndex * lastDimensionSize + j] - total);
                     }
+
                     total = 0.0;
                 }
             }
@@ -63,10 +77,17 @@ namespace ComputationalGraph.Function
             return tensor.HadamardProduct(new Tensor(values, tensor.GetShape()));
         }
 
-        public ComputationalNode addEdge(List<ComputationalNode> inputNodes, bool isBiased)
+        /**
+         * <summary>Adds a softmax function edge to the computational graph.</summary>
+         *
+         * <param name="inputNodes">Input nodes of the function.</param>
+         * <param name="isBiased">Indicates whether the created node is biased.</param>
+         * <returns>The created computational node.</returns>
+         */
+        public ComputationalNode AddEdge(List<ComputationalNode> inputNodes, bool isBiased)
         {
-            ComputationalNode newNode = new FunctionNode(isBiased, this);
-            inputNodes[0].add(newNode);
+            var newNode = new FunctionNode(isBiased, this);
+            inputNodes[0].Add(newNode);
             return newNode;
         }
     }

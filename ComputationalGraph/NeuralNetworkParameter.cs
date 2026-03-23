@@ -11,13 +11,24 @@ namespace ComputationalGraph
     [Serializable]
     public class NeuralNetworkParameter : Parameter
     {
-        private readonly CGOptimizer optimizer;
-        private readonly int epoch;
-        private readonly Initialization.Initialization initialization;
-        private readonly double dropout;
-        private readonly CGFunction lossFunction;
-        private readonly int batchSize;
+        private readonly CGOptimizer _optimizer;
+        private readonly int _epoch;
+        private readonly Initialization.Initialization _initialization;
+        private readonly double _dropout;
+        private readonly CGFunction _lossFunction;
+        private readonly int _batchSize;
 
+        /**
+         * <summary>Creates a neural network parameter object with all configuration values.</summary>
+         *
+         * <param name="seed">Random seed value.</param>
+         * <param name="epoch">Number of training epochs.</param>
+         * <param name="optimizer">Optimizer of the neural network.</param>
+         * <param name="initialization">Initialization strategy of the network weights.</param>
+         * <param name="lossFunction">Loss function of the neural network.</param>
+         * <param name="dropout">Dropout rate.</param>
+         * <param name="batchSize">Batch size used during training.</param>
+         */
         public NeuralNetworkParameter(
             int seed,
             int epoch,
@@ -28,64 +39,113 @@ namespace ComputationalGraph
             int batchSize)
             : base(seed)
         {
-            this.optimizer = optimizer;
-            this.epoch = epoch;
-            this.initialization = initialization;
-            this.dropout = dropout;
-            this.lossFunction = lossFunction;
-            this.batchSize = batchSize;
+            _optimizer = optimizer;
+            _epoch = epoch;
+            _initialization = initialization;
+            _dropout = dropout;
+            _lossFunction = lossFunction;
+            _batchSize = batchSize;
         }
 
+        /**
+         * <summary>Creates a neural network parameter object with default initialization, loss function, dropout, and batch size.</summary>
+         *
+         * <param name="seed">Random seed value.</param>
+         * <param name="epoch">Number of training epochs.</param>
+         * <param name="optimizer">Optimizer of the neural network.</param>
+         */
         public NeuralNetworkParameter(int seed, int epoch, CGOptimizer optimizer)
             : base(seed)
         {
-            this.optimizer = optimizer;
-            this.epoch = epoch;
-            this.initialization = new RandomInitialization();
-            this.dropout = 0.0;
-            this.lossFunction = new CrossEntropyLossFunction();
-            this.batchSize = 1;
+            _optimizer = optimizer;
+            _epoch = epoch;
+            _initialization = new RandomInitialization();
+            _dropout = 0.0;
+            _lossFunction = new CrossEntropyLossFunction();
+            _batchSize = 1;
         }
 
+        /**
+         * <summary>Creates a neural network parameter object with default initialization and batch size.</summary>
+         *
+         * <param name="seed">Random seed value.</param>
+         * <param name="epoch">Number of training epochs.</param>
+         * <param name="optimizer">Optimizer of the neural network.</param>
+         * <param name="lossFunction">Loss function of the neural network.</param>
+         * <param name="dropout">Dropout rate.</param>
+         */
         public NeuralNetworkParameter(int seed, int epoch, CGOptimizer optimizer, CGFunction lossFunction, double dropout)
             : base(seed)
         {
-            this.optimizer = optimizer;
-            this.epoch = epoch;
-            this.initialization = new RandomInitialization();
-            this.dropout = dropout;
-            this.lossFunction = lossFunction;
-            this.batchSize = 1;
+            _optimizer = optimizer;
+            _epoch = epoch;
+            _initialization = new RandomInitialization();
+            _dropout = dropout;
+            _lossFunction = lossFunction;
+            _batchSize = 1;
         }
 
-        public CGOptimizer getOptimizer()
+        /**
+         * <summary>Returns the optimizer of the neural network.</summary>
+         *
+         * <returns>The optimizer of the neural network.</returns>
+         */
+        public CGOptimizer GetOptimizer()
         {
-            return optimizer;
+            return _optimizer;
         }
 
-        public int getEpoch()
+        /**
+         * <summary>Returns the number of training epochs.</summary>
+         *
+         * <returns>The number of training epochs.</returns>
+         */
+        public int GetEpoch()
         {
-            return epoch;
+            return _epoch;
         }
 
-        public List<double> initializeWeights(int row, int column, Random random)
+        /**
+         * <summary>Initializes the weights for the given matrix dimensions.</summary>
+         *
+         * <param name="row">Number of rows.</param>
+         * <param name="column">Number of columns.</param>
+         * <param name="random">Random object used for initialization.</param>
+         * <returns>A list of initialized weight values.</returns>
+         */
+        public List<double> InitializeWeights(int row, int column, Random random)
         {
-            return initialization.Initialize(row, column, random);
+            return _initialization.Initialize(row, column, random);
         }
 
-        public double getDropout()
+        /**
+         * <summary>Returns the dropout rate.</summary>
+         *
+         * <returns>The dropout rate.</returns>
+         */
+        public double GetDropout()
         {
-            return dropout;
+            return _dropout;
         }
 
-        public CGFunction getLossFunction()
+        /**
+         * <summary>Returns the loss function of the neural network.</summary>
+         *
+         * <returns>The loss function of the neural network.</returns>
+         */
+        public CGFunction GetLossFunction()
         {
-            return lossFunction;
+            return _lossFunction;
         }
 
-        public int getBatchSize()
+        /**
+         * <summary>Returns the batch size.</summary>
+         *
+         * <returns>The batch size.</returns>
+         */
+        public int GetBatchSize()
         {
-            return batchSize;
+            return _batchSize;
         }
     }
 }

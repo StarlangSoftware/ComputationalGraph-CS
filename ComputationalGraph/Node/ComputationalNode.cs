@@ -7,89 +7,154 @@ namespace ComputationalGraph.Node
     [Serializable]
     public class ComputationalNode
     {
-        protected Tensor value;
-        protected Tensor backward;
-        protected readonly bool isBiased;
-        protected readonly bool learnable;
-        private readonly List<ComputationalNode> children;
-        private readonly List<ComputationalNode> parents;
+        protected Tensor Value;
+        protected Tensor Backward;
+        protected readonly bool IsBiased;
+        protected readonly bool Learnable;
+        private readonly List<ComputationalNode> _children;
+        private readonly List<ComputationalNode> _parents;
 
+        /**
+         * <summary>Creates a computational node with the given learnability, bias flag, and value.</summary>
+         *
+         * <param name="learnable">Indicates whether the node is learnable.</param>
+         * <param name="isBiased">Indicates whether the node is biased.</param>
+         * <param name="value">Tensor value of the node.</param>
+         */
         public ComputationalNode(bool learnable, bool isBiased, Tensor value)
         {
-            this.value = value;
-            this.backward = null;
-            this.isBiased = isBiased;
-            this.learnable = learnable;
-            children = new List<ComputationalNode>();
-            parents = new List<ComputationalNode>();
+            Value = value;
+            Backward = null;
+            IsBiased = isBiased;
+            Learnable = learnable;
+            _children = new List<ComputationalNode>();
+            _parents = new List<ComputationalNode>();
         }
 
+        /**
+         * <summary>Creates a computational node with the given learnability and bias flag.</summary>
+         *
+         * <param name="learnable">Indicates whether the node is learnable.</param>
+         * <param name="isBiased">Indicates whether the node is biased.</param>
+         */
         public ComputationalNode(bool learnable, bool isBiased)
             : this(learnable, isBiased, null)
         {
         }
 
+        /**
+         * <summary>Creates a default computational node.</summary>
+         */
         public ComputationalNode()
             : this(false, false)
         {
         }
 
-        public ComputationalNode getChild(int index)
+        /**
+         * <summary>Returns the child node at the specified index.</summary>
+         *
+         * <param name="index">Index of the child node.</param>
+         * <returns>The child node at the given index.</returns>
+         */
+        public ComputationalNode GetChild(int index)
         {
-            return children[index];
+            return _children[index];
         }
 
-        public void addChild(ComputationalNode child)
+        /**
+         * <summary>Adds a child node to this node.</summary>
+         *
+         * <param name="child">Child node to be added.</param>
+         */
+        public void AddChild(ComputationalNode child)
         {
-            children.Add(child);
+            _children.Add(child);
         }
 
-        public void addParent(ComputationalNode parent)
+        /**
+         * <summary>Adds a parent node to this node.</summary>
+         *
+         * <param name="parent">Parent node to be added.</param>
+         */
+        public void AddParent(ComputationalNode parent)
         {
-            parents.Add(parent);
+            _parents.Add(parent);
         }
 
-        public void add(ComputationalNode child)
+        /**
+         * <summary>Adds the given node as a child and sets this node as its parent.</summary>
+         *
+         * <param name="child">Child node to be connected.</param>
+         */
+        public void Add(ComputationalNode child)
         {
-            children.Add(child);
-            child.addParent(this);
+            _children.Add(child);
+            child.AddParent(this);
         }
 
-        public ComputationalNode getParent(int index)
+        /**
+         * <summary>Returns the parent node at the specified index.</summary>
+         *
+         * <param name="index">Index of the parent node.</param>
+         * <returns>The parent node at the given index.</returns>
+         */
+        public ComputationalNode GetParent(int index)
         {
-            return parents[index];
+            return _parents[index];
         }
 
-        public int childrenSize()
+        /**
+         * <summary>Returns the number of child nodes.</summary>
+         *
+         * <returns>The number of child nodes.</returns>
+         */
+        public int ChildrenSize()
         {
-            return children.Count;
+            return _children.Count;
         }
 
-        public int parentsSize()
+        /**
+         * <summary>Returns the number of parent nodes.</summary>
+         *
+         * <returns>The number of parent nodes.</returns>
+         */
+        public int ParentsSize()
         {
-            return parents.Count;
+            return _parents.Count;
         }
 
-        public bool isLearnable()
+        /**
+         * <summary>Returns whether the node is learnable.</summary>
+         *
+         * <returns>True if the node is learnable; otherwise, false.</returns>
+         */
+        public bool IsLearnable()
         {
-            return learnable;
+            return Learnable;
         }
 
+        /**
+         * <summary>Returns a string representation of the node.</summary>
+         *
+         * <returns>A string representation of the node.</returns>
+         */
         public override string ToString()
         {
-            string details = "";
+            var details = "";
 
-            if (value != null)
+            if (Value != null)
             {
+                var shape = Value.GetShape();
+
                 if (details.Length > 0)
                 {
                     details += ", ";
                 }
 
-                details += "Value Shape: [" + value.GetShape()[0];
-                for (int i = 1; i < value.GetShape().Length; i++)
+                details += "Value Shape: [" + shape[0];
+                for (var i = 1; i < shape.Length; i++)
                 {
-                    details += ", " + value.GetShape()[i];
+                    details += ", " + shape[i];
                 }
 
                 details += "]";
@@ -100,40 +165,68 @@ namespace ComputationalGraph.Node
                 details += ", ";
             }
 
-            details += "is learnable: " + learnable;
-            details += ", is biased: " + isBiased;
+            details += "is learnable: " + Learnable;
+            details += ", is biased: " + IsBiased;
 
             return "Node(" + details + ")";
         }
 
-        public bool isBiasedNode()
+        /**
+         * <summary>Returns whether the node is biased.</summary>
+         *
+         * <returns>True if the node is biased; otherwise, false.</returns>
+         */
+        public bool IsBiasedNode()
         {
-            return isBiased;
+            return IsBiased;
         }
 
-        public Tensor getValue()
+        /**
+         * <summary>Returns the tensor value of the node.</summary>
+         *
+         * <returns>The tensor value of the node.</returns>
+         */
+        public Tensor GetValue()
         {
-            return value;
+            return Value;
         }
 
-        public void setValue(Tensor value)
+        /**
+         * <summary>Sets the tensor value of the node.</summary>
+         *
+         * <param name="value">New tensor value.</param>
+         */
+        public void SetValue(Tensor value)
         {
-            this.value = value;
+            Value = value;
         }
 
-        public void updateValue()
+        /**
+         * <summary>Updates the tensor value using the backward tensor.</summary>
+         */
+        public void UpdateValue()
         {
-            value.Add(backward);
+            Value.Add(Backward);
         }
 
-        public Tensor getBackward()
+        /**
+         * <summary>Returns the backward tensor of the node.</summary>
+         *
+         * <returns>The backward tensor of the node.</returns>
+         */
+        public Tensor GetBackward()
         {
-            return backward;
+            return Backward;
         }
 
-        public void setBackward(Tensor backward)
+        /**
+         * <summary>Sets the backward tensor of the node.</summary>
+         *
+         * <param name="backward">New backward tensor.</param>
+         */
+        public void SetBackward(Tensor backward)
         {
-            this.backward = backward;
+            Backward = backward;
         }
     }
 }

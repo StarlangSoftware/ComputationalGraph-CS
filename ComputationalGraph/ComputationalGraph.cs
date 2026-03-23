@@ -13,105 +13,175 @@ namespace ComputationalGraph
     [Serializable]
     public abstract class ComputationalGraph
     {
-        protected ComputationalNode outputNode;
-        protected List<ComputationalNode> inputNodes;
-        private List<ComputationalNode> leafNodes;
-        protected readonly NeuralNetworkParameter parameters;
+        protected ComputationalNode OutputNode;
+        protected List<ComputationalNode> InputNodes;
+        private List<ComputationalNode> _leafNodes;
+        protected readonly NeuralNetworkParameter Parameters;
 
+        /**
+         * <summary>Creates a computational graph with the given neural network parameters.</summary>
+         *
+         * <param name="parameters">Neural network parameters of the graph.</param>
+         */
         public ComputationalGraph(NeuralNetworkParameter parameters)
         {
-            this.inputNodes = new List<ComputationalNode>();
-            this.parameters = parameters;
+            InputNodes = new List<ComputationalNode>();
+            Parameters = parameters;
         }
 
-        public abstract void train(List<Tensor> trainSet);
+        /**
+         * <summary>Trains the computational graph using the given training set.</summary>
+         *
+         * <param name="trainSet">Training set used for training.</param>
+         */
+        public abstract void Train(List<Tensor> trainSet);
 
-        public abstract ClassificationPerformance test(List<Tensor> testSet);
+        /**
+         * <summary>Tests the computational graph using the given test set.</summary>
+         *
+         * <param name="testSet">Test set used for evaluation.</param>
+         * <returns>Classification performance of the model.</returns>
+         */
+        public abstract ClassificationPerformance Test(List<Tensor> testSet);
 
-        protected abstract List<double> getOutputValue(ComputationalNode outputNode);
+        /**
+         * <summary>Returns the output values of the given output node.</summary>
+         *
+         * <param name="outputNode">Output node of the graph.</param>
+         * <returns>Output values of the node.</returns>
+         */
+        protected abstract List<double> GetOutputValue(ComputationalNode outputNode);
 
-        protected ComputationalNode addEdge(ComputationalNode first, object second, bool isBiased)
+        /**
+         * <summary>Adds an edge between the first node and the second object.</summary>
+         *
+         * <param name="first">First node.</param>
+         * <param name="second">Second object which may be a function or computational node.</param>
+         * <param name="isBiased">Indicates whether the new node is biased.</param>
+         * <returns>The newly created computational node.</returns>
+         */
+        protected ComputationalNode AddEdge(ComputationalNode first, object second, bool isBiased)
         {
             if (second is CGFunction function)
             {
-                List<ComputationalNode> nodes = new List<ComputationalNode>();
+                var nodes = new List<ComputationalNode>();
                 nodes.Add(first);
-                return function.addEdge(nodes, isBiased);
+                return function.AddEdge(nodes, isBiased);
             }
-            else
+
+            var newNode = second is MultiplicationNode multiplicationNode
+                ? new MultiplicationNode(false, isBiased, multiplicationNode.IsHadamard(), first)
+                : throw new ArgumentException("Illegal Type of Object: second");
+
+            first.AddChild(newNode);
+            newNode.AddParent(first);
+            ((ComputationalNode)second).AddChild(newNode);
+            newNode.AddParent((ComputationalNode)second);
+            return newNode;
+        }
+
+        /**
+         * <summary>Adds an edge between the first node and the second object without bias.</summary>
+         *
+         * <param name="first">First node.</param>
+         * <param name="second">Second object which may be a function or computational node.</param>
+         * <returns>The newly created computational node.</returns>
+         */
+        protected ComputationalNode AddEdge(ComputationalNode first, object second)
+        {
+            return AddEdge(first, second, false);
+        }
+
+        /**
+         * <summary>Adds a function edge for the given input nodes.</summary>
+         *
+         * <param name="inputNodes">Input nodes of the function.</param>
+         * <param name="second">Function to be applied.</param>
+         * <param name="isBiased">Indicates whether the new node is biased.</param>
+         * <returns>The newly created computational node.</returns>
+         */
+        protected ComputationalNode AddFunctionEdge(List<ComputationalNode> inputNodes, CGFunction second, bool isBiased)
+        {
+            return second.AddEdge(inputNodes, isBiased);
+        }
+
+        /**
+         * <summary>Adds a multiplication edge between two computational nodes.</summary>
+         *
+         * <param name="first">First node.</param>
+ <param name="first">First node.</param>
+         * <param name="second">Second node.</param>
+         * <param name="isBiased">Indicates whether the new node is biased.</param>
+         * <param name="isHadamard">Indicates whether the multiplication is Hadamard multiplication.</param>
+         * <returns>The newly created multiplication node.</returns>
+         */
+        protected ComputationalNode AddEdge(ComputationalNode first, ComputationalNode second, bool isBiased, bool isHadamard)
+        {
+            var newNode = new MultiplicationNode(false, isBiased, isHadamard, first);
+            first.AddChild(newNode);
+            newNode.AddParent(first);
+            second.AddChild(newNode);
+            newNode.AddParent(second);
+            return newNode;
+        }
+
+        /**
+         * <summary>Adds an addition edge between two computational nodes.</summary>
+         *
+         * <param name="first">First node.</param>
+         * <param name="second">Second node.</param>
+         * <param name="isBiased">Indicates whether the new node is biased.</param>
+         * <returns>The newly created addition node.</returns>
+         */
+        protected ComputationalNode AddAdditionEdge(ComputationalNode first, ComputationalNode second, bool isBiased)
+        {
+            var newNode = new ComputationalNode(false, isBiased);
+            first.AddChild(newNode);
+            newNode.AddParent(first);
+            second.AddChild(newNode);
+            newNode.AddParent(second);
+            return newNode;
+        }
+
+        /**
+         * <summary>Concatenates the given nodes along the specified dimension.</summary>
+         *
+         * <param name="nodes">Nodes to be concatenated.</param>
+         * <param name="dimension">Concatenation dimension.</param>
+         * <returns>The concatenated node.</returns>
+         */
+        protected ComputationalNode ConcatEdges(List<ComputationalNode> nodes, int dimension)
+        {
+            var newNode = new ConcatenatedNode(dimension);
+            foreach (var node in nodes)
             {
-                ComputationalNode newNode;
-                if (second is MultiplicationNode multiplicationNode)
-                {
-                    newNode = new MultiplicationNode(false, isBiased, multiplicationNode.isHadamard(), first);
-                }
-                else
-                {
-                    throw new ArgumentException("Illegal Type of Object: second");
-                }
-
-                first.addChild(newNode);
-                newNode.addParent(first);
-                ((ComputationalNode)second).addChild(newNode);
-                newNode.addParent((ComputationalNode)second);
-                return newNode;
+                node.AddChild(newNode);
+                newNode.AddParent(node);
+                newNode.AddNode(node);
             }
-        }
 
-        protected ComputationalNode addEdge(ComputationalNode first, object second)
-        {
-            return addEdge(first, second, false);
-        }
-
-        protected ComputationalNode addFunctionEdge(List<ComputationalNode> inputNodes, CGFunction second, bool isBiased)
-        {
-            return second.addEdge(inputNodes, isBiased);
-        }
-
-        protected ComputationalNode addEdge(ComputationalNode first, ComputationalNode second, bool isBiased, bool isHadamard)
-        {
-            ComputationalNode newNode = new MultiplicationNode(false, isBiased, isHadamard, first);
-            first.addChild(newNode);
-            newNode.addParent(first);
-            second.addChild(newNode);
-            newNode.addParent(second);
             return newNode;
         }
 
-        protected ComputationalNode addAdditionEdge(ComputationalNode first, ComputationalNode second, bool isBiased)
+        /**
+         * <summary>Recursively sorts nodes in topological order.</summary>
+         *
+         * <param name="node">Current node.</param>
+         * <param name="visited">Visited node set.</param>
+         * <returns>Sorted linked list of nodes.</returns>
+         */
+        private LinkedList<ComputationalNode> SortRecursive(ComputationalNode node, HashSet<ComputationalNode> visited)
         {
-            ComputationalNode newNode = new ComputationalNode(false, isBiased);
-            first.addChild(newNode);
-            newNode.addParent(first);
-            second.addChild(newNode);
-            newNode.addParent(second);
-            return newNode;
-        }
-
-        protected ComputationalNode concatEdges(List<ComputationalNode> nodes, int dimension)
-        {
-            ConcatenatedNode newNode = new ConcatenatedNode(dimension);
-            foreach (ComputationalNode node in nodes)
-            {
-                node.addChild(newNode);
-                newNode.addParent(node);
-                newNode.addNode(node);
-            }
-            return newNode;
-        }
-
-        private LinkedList<ComputationalNode> sortRecursive(ComputationalNode node, HashSet<ComputationalNode> visited)
-        {
-            LinkedList<ComputationalNode> queue = new LinkedList<ComputationalNode>();
+            var queue = new LinkedList<ComputationalNode>();
             visited.Add(node);
 
-            for (int i = 0; i < node.childrenSize(); i++)
+            for (var i = 0; i < node.ChildrenSize(); i++)
             {
-                ComputationalNode child = node.getChild(i);
+                var child = node.GetChild(i);
                 if (!visited.Contains(child))
                 {
-                    LinkedList<ComputationalNode> childQueue = sortRecursive(child, visited);
-                    foreach (ComputationalNode item in childQueue)
+                    var childQueue = SortRecursive(child, visited);
+                    foreach (var item in childQueue)
                     {
                         queue.AddLast(item);
                     }
@@ -122,16 +192,21 @@ namespace ComputationalGraph
             return queue;
         }
 
-        private LinkedList<ComputationalNode> topologicalSort()
+        /**
+         * <summary>Returns the topologically sorted list of nodes.</summary>
+         *
+         * <returns>Topologically sorted linked list of nodes.</returns>
+         */
+        private LinkedList<ComputationalNode> TopologicalSort()
         {
-            LinkedList<ComputationalNode> sortedList = new LinkedList<ComputationalNode>();
-            HashSet<ComputationalNode> visited = new HashSet<ComputationalNode>();
+            var sortedList = new LinkedList<ComputationalNode>();
+            var visited = new HashSet<ComputationalNode>();
 
-            foreach (ComputationalNode node in leafNodes)
+            foreach (var node in _leafNodes)
             {
                 if (!visited.Contains(node))
                 {
-                    LinkedList<ComputationalNode> queue = sortRecursive(node, visited);
+                    var queue = SortRecursive(node, visited);
                     while (queue.Count > 0)
                     {
                         sortedList.AddLast(queue.First.Value);
@@ -143,43 +218,58 @@ namespace ComputationalGraph
             return sortedList;
         }
 
-        private void clearRecursive(HashSet<ComputationalNode> visited, ComputationalNode node)
+        /**
+         * <summary>Clears values and backward tensors recursively starting from the given node.</summary>
+         *
+         * <param name="visited">Visited node set.</param>
+         * <param name="node">Current node.</param>
+         */
+        private void ClearRecursive(HashSet<ComputationalNode> visited, ComputationalNode node)
         {
             visited.Add(node);
 
-            if (!node.isLearnable())
+            if (!node.IsLearnable())
             {
-                node.setValue(null);
+                node.SetValue(null);
             }
 
-            node.setBackward(null);
+            node.SetBackward(null);
 
-            for (int i = 0; i < node.childrenSize(); i++)
+            for (var i = 0; i < node.ChildrenSize(); i++)
             {
-                ComputationalNode child = node.getChild(i);
+                var child = node.GetChild(i);
                 if (!visited.Contains(child))
                 {
-                    clearRecursive(visited, child);
+                    ClearRecursive(visited, child);
                 }
             }
         }
 
-        private void clear()
+        /**
+         * <summary>Clears temporary values and backward tensors in the graph.</summary>
+         */
+        private void Clear()
         {
-            HashSet<ComputationalNode> visited = new HashSet<ComputationalNode>();
-            foreach (ComputationalNode node in leafNodes)
+            var visited = new HashSet<ComputationalNode>();
+            foreach (var node in _leafNodes)
             {
                 if (!visited.Contains(node))
                 {
-                    clearRecursive(visited, node);
+                    ClearRecursive(visited, node);
                 }
             }
         }
 
-        private int[] transposeAxes(int length)
+        /**
+         * <summary>Returns the transposed axis order for the given tensor rank.</summary>
+         *
+         * <param name="length">Rank of the tensor.</param>
+         * <returns>Axis order for transpose operation.</returns>
+         */
+        private int[] TransposeAxes(int length)
         {
-            int[] axes = new int[length];
-            for (int i = 0; i < axes.Length - 2; i++)
+            var axes = new int[length];
+            for (var i = 0; i < axes.Length - 2; i++)
             {
                 axes[i] = i;
             }
@@ -189,193 +279,192 @@ namespace ComputationalGraph
             return axes;
         }
 
-        private Tensor getBiasedPartial(Tensor tensor)
+        /**
+         * <summary>Returns the unbiased partial tensor by removing the last biased component.</summary>
+         *
+         * <param name="tensor">Input tensor.</param>
+         * <returns>Unbiased partial tensor.</returns>
+         */
+        private Tensor GetBiasedPartial(Tensor tensor)
         {
-            int[] endIndexes = new int[tensor.GetShape().Length];
-            for (int i = 0; i < endIndexes.Length; i++)
+            var endIndexes = new int[tensor.GetShape().Length];
+            for (var i = 0; i < endIndexes.Length; i++)
             {
-                if (i == endIndexes.Length - 1)
-                {
-                    endIndexes[i] = tensor.GetShape()[i] - 1;
-                }
-                else
-                {
-                    endIndexes[i] = tensor.GetShape()[i];
-                }
+                endIndexes[i] = i == endIndexes.Length - 1
+                    ? tensor.GetShape()[i] - 1
+                    : tensor.GetShape()[i];
             }
 
             return tensor.Partial(new int[tensor.GetShape().Length], endIndexes);
         }
 
-        private Tensor calculateDerivative(ComputationalNode node, ComputationalNode child)
+        /**
+         * <summary>Calculates the derivative of the given child node with respect to the given node.</summary>
+         *
+         * <param name="node">Parent node.</param>
+         * <param name="child">Child node.</param>
+         * <returns>Calculated derivative tensor.</returns>
+         */
+        private Tensor CalculateDerivative(ComputationalNode node, ComputationalNode child)
         {
-            if (child.parentsSize() == 0)
+            if (child.ParentsSize() == 0)
             {
                 return null;
             }
 
-            Tensor backward;
-            if (child.isBiasedNode())
-            {
-                backward = getBiasedPartial(child.getBackward());
-            }
-            else
-            {
-                backward = child.getBackward();
-            }
+            var backward = child.IsBiasedNode()
+                ? GetBiasedPartial(child.GetBackward())
+                : child.GetBackward();
 
             if (child is FunctionNode functionNode)
             {
-                CGFunction function = functionNode.getFunction();
-                Tensor childValue;
+                var function = functionNode.GetFunction();
+                var childValue = child.IsBiasedNode()
+                    ? GetBiasedPartial(child.GetValue())
+                    : child.GetValue();
 
-                if (child.isBiasedNode())
-                {
-                    childValue = getBiasedPartial(child.getValue());
-                }
-                else
-                {
-                    childValue = child.getValue();
-                }
-
-                return function.derivative(childValue, backward);
+                return function.Derivative(childValue, backward);
             }
-            else
+
+            if (child is ConcatenatedNode concatenatedNode)
             {
-                if (child is ConcatenatedNode concatenatedNode)
+                var index = concatenatedNode.GetIndex(node);
+                var blockSize = backward.GetShape()[concatenatedNode.GetDimension()] / child.ParentsSize();
+                var dimensions = blockSize;
+                var shape = new int[backward.GetShape().Length];
+
+                for (var i = 0; i < backward.GetShape().Length; i++)
                 {
-                    int index = concatenatedNode.getIndex(node);
-                    int blockSize = backward.GetShape()[concatenatedNode.getDimension()] / child.parentsSize();
-                    int dimensions = blockSize;
-                    int[] shape = new int[backward.GetShape().Length];
-
-                    for (int i = 0; i < backward.GetShape().Length; i++)
+                    if (concatenatedNode.GetDimension() > i)
                     {
-                        if (concatenatedNode.getDimension() > i)
-                        {
-                            shape[i] = backward.GetShape()[i];
-                        }
-                        else if (concatenatedNode.getDimension() < i)
-                        {
-                            dimensions *= backward.GetShape()[i];
-                            shape[i] = backward.GetShape()[i];
-                        }
-                        else
-                        {
-                            shape[i] = blockSize;
-                        }
+                        shape[i] = backward.GetShape()[i];
                     }
-
-                    List<double> childValues = (List<double>)backward.GetData();
-                    List<double> newValues = new List<double>();
-
-                    int start = index * dimensions;
-                    while (start < childValues.Count)
+                    else if (concatenatedNode.GetDimension() < i)
                     {
-                        for (int k = 0; k < dimensions; k++)
-                        {
-                            newValues.Add(childValues[start + k]);
-                        }
-
-                        start += child.parentsSize() * dimensions;
+                        dimensions *= backward.GetShape()[i];
+                        shape[i] = backward.GetShape()[i];
                     }
-
-                    return new Tensor(newValues, shape);
+                    else
+                    {
+                        shape[i] = blockSize;
+                    }
                 }
-                else
+
+                var childValues = (List<double>)backward.GetData();
+                var newValues = new List<double>();
+
+                var start = index * dimensions;
+                while (start < childValues.Count)
                 {
-                    if (child is MultiplicationNode multiplicationNode)
+                    for (var k = 0; k < dimensions; k++)
                     {
-                        ComputationalNode left = child.getParent(0);
-                        ComputationalNode right = child.getParent(1);
-
-                        if (ReferenceEquals(left, node))
-                        {
-                            Tensor rightValue = right.getValue();
-                            if (multiplicationNode.isHadamard())
-                            {
-                                return rightValue.HadamardProduct(backward);
-                            }
-
-                            return backward.Multiply(rightValue.Transpose(transposeAxes(rightValue.GetShape().Length)));
-                        }
-
-                        Tensor leftValue = left.getValue();
-                        if (multiplicationNode.isHadamard())
-                        {
-                            return leftValue.HadamardProduct(backward);
-                        }
-
-                        if (leftValue != null && backward != null)
-                        {
-                            return leftValue.Transpose(transposeAxes(leftValue.GetShape().Length)).Multiply(backward);
-                        }
-
-                        throw new NullReferenceException("Backward and/or left child values are null");
+                        newValues.Add(childValues[start + k]);
                     }
 
-                    return backward;
+                    start += child.ParentsSize() * dimensions;
                 }
+
+                return new Tensor(newValues, shape);
             }
+
+            if (child is MultiplicationNode multiplicationNode)
+            {
+                var left = child.GetParent(0);
+                var right = child.GetParent(1);
+
+                if (ReferenceEquals(left, node))
+                {
+                    var rightValue = right.GetValue();
+                    if (multiplicationNode.IsHadamard())
+                    {
+                        return rightValue.HadamardProduct(backward);
+                    }
+
+                    return backward.Multiply(rightValue.Transpose(TransposeAxes(rightValue.GetShape().Length)));
+                }
+
+                var leftValue = left.GetValue();
+                if (multiplicationNode.IsHadamard())
+                {
+                    return leftValue.HadamardProduct(backward);
+                }
+
+                if (leftValue != null && backward != null)
+                {
+                    return leftValue.Transpose(TransposeAxes(leftValue.GetShape().Length)).Multiply(backward);
+                }
+
+                throw new NullReferenceException("Backward and/or left child values are null");
+            }
+
+            return backward;
         }
 
-        protected void backpropagation()
+        /**
+         * <summary>Performs backpropagation on the graph.</summary>
+         */
+        protected void Backpropagation()
         {
-            LinkedList<ComputationalNode> sortedNodes = topologicalSort();
+            var sortedNodes = TopologicalSort();
             if (sortedNodes.Count == 0)
             {
                 return;
             }
 
-            ComputationalNode currentOutputNode = sortedNodes.First.Value;
+            var currentOutputNode = sortedNodes.First.Value;
             sortedNodes.RemoveFirst();
 
-            List<double> backward = new List<double>();
-            for (int i = 0; i < ((List<double>)currentOutputNode.getValue().GetData()).Count; i++)
+            var backward = new List<double>();
+            for (var i = 0; i < ((List<double>)currentOutputNode.GetValue().GetData()).Count; i++)
             {
-                backward.Add(1.0 / this.parameters.getBatchSize());
+                backward.Add(1.0 / Parameters.GetBatchSize());
             }
 
-            currentOutputNode.setBackward(new Tensor(backward, currentOutputNode.getValue().GetShape()));
+            currentOutputNode.SetBackward(new Tensor(backward, currentOutputNode.GetValue().GetShape()));
 
             while (sortedNodes.Count > 0)
             {
-                ComputationalNode node = sortedNodes.First.Value;
+                var node = sortedNodes.First.Value;
                 sortedNodes.RemoveFirst();
 
-                if (node.childrenSize() > 0)
+                if (node.ChildrenSize() > 0)
                 {
-                    for (int i = 0; i < node.childrenSize(); i++)
+                    for (var i = 0; i < node.ChildrenSize(); i++)
                     {
-                        ComputationalNode child = node.getChild(i);
-                        Tensor derivative = calculateDerivative(node, child);
+                        var child = node.GetChild(i);
+                        var derivative = CalculateDerivative(node, child);
 
                         if (derivative != null)
                         {
-                            if (node.getBackward() == null)
+                            if (node.GetBackward() == null)
                             {
-                                node.setBackward(derivative);
+                                node.SetBackward(derivative);
                             }
                             else
                             {
-                                node.setBackward(node.getBackward().Add(derivative));
+                                node.SetBackward(node.GetBackward().Add(derivative));
                             }
                         }
                     }
                 }
             }
 
-            this.parameters.getOptimizer().updateValues(this.leafNodes);
-            clear();
+            Parameters.GetOptimizer().UpdateValues(_leafNodes);
+            Clear();
         }
 
-        private void getBiased(ComputationalNode tensor)
+        /**
+         * <summary>Adds bias values to the given node tensor.</summary>
+         *
+         * <param name="tensor">Node whose tensor will be biased.</param>
+         */
+        private void GetBiased(ComputationalNode tensor)
         {
-            int lastDimensionSize = tensor.getValue().GetShape()[tensor.getValue().GetShape().Length - 1];
-            List<double> values = new List<double>();
-            List<double> oldValues = (List<double>)tensor.getValue().GetData();
+            var lastDimensionSize = tensor.GetValue().GetShape()[tensor.GetValue().GetShape().Length - 1];
+            var values = new List<double>();
+            var oldValues = (List<double>)tensor.GetValue().GetData();
 
-            for (int i = 0; i < oldValues.Count; i++)
+            for (var i = 0; i < oldValues.Count; i++)
             {
                 values.Add(oldValues[i]);
                 if ((i + 1) % lastDimensionSize == 0)
@@ -384,73 +473,89 @@ namespace ComputationalGraph
                 }
             }
 
-            int[] shape = new int[tensor.getValue().GetShape().Length];
-            for (int i = 0; i < shape.Length; i++)
+            var shape = new int[tensor.GetValue().GetShape().Length];
+            for (var i = 0; i < shape.Length; i++)
             {
-                if (i == shape.Length - 1)
-                {
-                    shape[i] = tensor.getValue().GetShape()[i] + 1;
-                }
-                else
-                {
-                    shape[i] = tensor.getValue().GetShape()[i];
-                }
+                shape[i] = i == shape.Length - 1
+                    ? tensor.GetValue().GetShape()[i] + 1
+                    : tensor.GetValue().GetShape()[i];
             }
 
-            Tensor biasedValue = new Tensor(values, shape);
-            tensor.setValue(biasedValue);
+            var biasedValue = new Tensor(values, shape);
+            tensor.SetValue(biasedValue);
         }
 
-        protected List<double> predict()
+        /**
+         * <summary>Predicts class labels using forward calculation without dropout.</summary>
+         *
+         * <returns>Predicted class labels.</returns>
+         */
+        protected List<double> Predict()
         {
-            List<double> classLabels = forwardCalculation(false);
-            clear();
+            var classLabels = ForwardCalculation(false);
+            Clear();
             return classLabels;
         }
 
-        protected List<double> forwardCalculation()
+        /**
+         * <summary>Performs forward calculation with dropout enabled.</summary>
+         *
+         * <returns>Output class labels.</returns>
+         */
+        protected List<double> ForwardCalculation()
         {
-            if (leafNodes == null)
+            if (_leafNodes == null)
             {
-                leafNodes = findLeafNodes();
+                _leafNodes = FindLeafNodes();
             }
 
-            return forwardCalculation(true);
+            return ForwardCalculation(true);
         }
 
-        private ComputationalNode findOutputNode(ComputationalNode node)
+        /**
+         * <summary>Finds the output node starting from the given node.</summary>
+         *
+         * <param name="node">Starting node.</param>
+         * <returns>Output node of the graph.</returns>
+         */
+        private ComputationalNode FindOutputNode(ComputationalNode node)
         {
-            if (node.childrenSize() == 0)
+            if (node.ChildrenSize() == 0)
             {
                 return node;
             }
 
-            return findOutputNode(node.getChild(0));
+            return FindOutputNode(node.GetChild(0));
         }
 
-        private List<ComputationalNode> findLeafNodes()
+        /**
+         * <summary>Finds all leaf nodes in the graph.</summary>
+         *
+         * <returns>List of leaf nodes.</returns>
+         */
+        private List<ComputationalNode> FindLeafNodes()
         {
-            List<ComputationalNode> leafNodes = new List<ComputationalNode>();
-            ComputationalNode foundOutputNode = findOutputNode(inputNodes[0]);
+            var leafNodes = new List<ComputationalNode>();
+            var foundOutputNode = FindOutputNode(InputNodes[0]);
 
-            List<ComputationalNode> queue = new List<ComputationalNode>();
-            HashSet<ComputationalNode> visited = new HashSet<ComputationalNode>();
+            var queue = new List<ComputationalNode>();
+            var visited = new HashSet<ComputationalNode>();
 
             queue.Add(foundOutputNode);
 
             while (queue.Count > 0)
             {
-                ComputationalNode currentNode = queue[0];
+                var currentNode = queue[0];
                 queue.RemoveAt(0);
 
-                if (currentNode.parentsSize() == 0)
+                if (currentNode.ParentsSize() == 0)
                 {
                     leafNodes.Add(currentNode);
                 }
 
-                for (int i = 0; i < currentNode.parentsSize(); i++)
+                for (var i = 0; i < currentNode.ParentsSize(); i++)
                 {
-                    ComputationalNode parent = currentNode.getParent(i);
+                    var parent = currentNode.GetParent(i);
                     if (!visited.Contains(parent))
                     {
                         visited.Add(parent);
@@ -462,147 +567,152 @@ namespace ComputationalGraph
             return leafNodes;
         }
 
-        private List<double> forwardCalculation(bool enableDropout)
+        /**
+         * <summary>Performs forward calculation with optional dropout.</summary>
+         *
+         * <param name="enableDropout">Indicates whether dropout is enabled.</param>
+         * <returns>Output class labels.</returns>
+         */
+        private List<double> ForwardCalculation(bool enableDropout)
         {
-            LinkedList<ComputationalNode> sortedNodes = topologicalSort();
+            var sortedNodes = TopologicalSort();
             if (sortedNodes.Count == 0)
             {
                 return new List<double>();
             }
 
-            Dictionary<ComputationalNode, ComputationalNode[]> concatenatedNodeMap =
-                new Dictionary<ComputationalNode, ComputationalNode[]>();
-
-            Dictionary<ComputationalNode, int> counterMap =
-                new Dictionary<ComputationalNode, int>();
+            var concatenatedNodeMap = new Dictionary<ComputationalNode, ComputationalNode[]>();
+            var counterMap = new Dictionary<ComputationalNode, int>();
 
             while (sortedNodes.Count > 1)
             {
-                ComputationalNode currentNode = sortedNodes.Last.Value;
+                var currentNode = sortedNodes.Last.Value;
                 sortedNodes.RemoveLast();
 
-                if (currentNode.isBiasedNode())
+                if (currentNode.IsBiasedNode())
                 {
-                    getBiased(currentNode);
+                    GetBiased(currentNode);
                 }
 
-                if (currentNode.getValue() == null)
+                if (currentNode.GetValue() == null)
                 {
                     throw new ArgumentException("Current node's value is null");
                 }
 
-                if (currentNode.childrenSize() > 0)
+                if (currentNode.ChildrenSize() > 0)
                 {
-                    if (ReferenceEquals(currentNode, outputNode) && !enableDropout)
+                    if (ReferenceEquals(currentNode, OutputNode) && !enableDropout)
                     {
                         break;
                     }
 
-                    for (int t = 0; t < currentNode.childrenSize(); t++)
+                    for (var t = 0; t < currentNode.ChildrenSize(); t++)
                     {
-                        ComputationalNode child = currentNode.getChild(t);
+                        var child = currentNode.GetChild(t);
 
-                        if (child.getValue() == null)
+                        if (child.GetValue() == null)
                         {
                             if (child is FunctionNode functionNode)
                             {
-                                CGFunction function = functionNode.getFunction();
-                                Tensor currentValue = currentNode.getValue();
+                                var function = functionNode.GetFunction();
+                                var currentValue = currentNode.GetValue();
 
                                 if (function is Dropout)
                                 {
                                     if (enableDropout)
                                     {
-                                        child.setValue(function.calculate(currentValue));
+                                        child.SetValue(function.Calculate(currentValue));
                                     }
                                     else
                                     {
-                                        child.setValue(new Tensor(currentValue.GetData(), currentValue.GetShape()));
+                                        child.SetValue(new Tensor(currentValue.GetData(), currentValue.GetShape()));
                                     }
                                 }
                                 else
                                 {
-                                    child.setValue(function.calculate(currentValue));
+                                    child.SetValue(function.Calculate(currentValue));
+                                }
+                            }
+                            else if (child is ConcatenatedNode concatenatedNode)
+                            {
+                                if (!concatenatedNodeMap.ContainsKey(child))
+                                {
+                                    concatenatedNodeMap[child] = new ComputationalNode[child.ParentsSize()];
+                                }
+
+                                concatenatedNodeMap[child][concatenatedNode.GetIndex(currentNode)] = currentNode;
+
+                                if (!counterMap.ContainsKey(child))
+                                {
+                                    counterMap[child] = 0;
+                                }
+
+                                counterMap[child] = counterMap[child] + 1;
+
+                                if (child.ParentsSize() == counterMap[child])
+                                {
+                                    child.SetValue(concatenatedNodeMap[child][0].GetValue());
+
+                                    for (var i = 1; i < concatenatedNodeMap[child].Length; i++)
+                                    {
+                                        child.SetValue(
+                                            child.GetValue().Concat(
+                                                concatenatedNodeMap[child][i].GetValue(),
+                                                concatenatedNode.GetDimension()));
+                                    }
                                 }
                             }
                             else
                             {
-                                if (child is ConcatenatedNode concatenatedNode)
-                                {
-                                    if (!concatenatedNodeMap.ContainsKey(child))
-                                    {
-                                        concatenatedNodeMap[child] = new ComputationalNode[child.parentsSize()];
-                                    }
-
-                                    concatenatedNodeMap[child][concatenatedNode.getIndex(currentNode)] = currentNode;
-
-                                    if (!counterMap.ContainsKey(child))
-                                    {
-                                        counterMap[child] = 0;
-                                    }
-
-                                    counterMap[child] = counterMap[child] + 1;
-
-                                    if (child.parentsSize() == counterMap[child])
-                                    {
-                                        child.setValue(concatenatedNodeMap[child][0].getValue());
-
-                                        for (int i = 1; i < concatenatedNodeMap[child].Length; i++)
-                                        {
-                                            child.setValue(
-                                                child.getValue().Concat(
-                                                    concatenatedNodeMap[child][i].getValue(),
-                                                    concatenatedNode.getDimension()));
-                                        }
-                                    }
-                                }
-                                else
-                                {
-                                    child.setValue(currentNode.getValue());
-                                }
+                                child.SetValue(currentNode.GetValue());
                             }
                         }
                         else
                         {
                             if (child is MultiplicationNode multiplicationNode)
                             {
-                                Tensor childValue = child.getValue();
-                                Tensor currentValue = currentNode.getValue();
+                                var childValue = child.GetValue();
+                                var currentValue = currentNode.GetValue();
 
-                                if (multiplicationNode.isHadamard())
+                                if (multiplicationNode.IsHadamard())
                                 {
-                                    child.setValue(childValue.HadamardProduct(currentValue));
+                                    child.SetValue(childValue.HadamardProduct(currentValue));
                                 }
-                                else if (!ReferenceEquals(multiplicationNode.getPriorityNode(), currentNode))
+                                else if (!ReferenceEquals(multiplicationNode.GetPriorityNode(), currentNode))
                                 {
-                                    child.setValue(childValue.Multiply(currentValue));
+                                    child.SetValue(childValue.Multiply(currentValue));
                                 }
                                 else
                                 {
-                                    child.setValue(currentValue.Multiply(childValue));
+                                    child.SetValue(currentValue.Multiply(childValue));
                                 }
                             }
                             else
                             {
-                                Tensor result = child.getValue();
-                                Tensor currentValue = currentNode.getValue();
-                                child.setValue(result.Add(currentValue));
+                                var result = child.GetValue();
+                                var currentValue = currentNode.GetValue();
+                                child.SetValue(result.Add(currentValue));
                             }
                         }
                     }
                 }
             }
 
-            return getOutputValue(outputNode);
+            return GetOutputValue(OutputNode);
         }
 
 #pragma warning disable SYSLIB0011
-        public void save(string fileName)
+        /**
+         * <summary>Saves the computational graph to the given file.</summary>
+         *
+         * <param name="fileName">Output file name.</param>
+         */
+        public void Save(string fileName)
         {
             try
             {
-                using FileStream outFile = new FileStream(fileName, FileMode.Create);
-                BinaryFormatter formatter = new BinaryFormatter();
+                using var outFile = new FileStream(fileName, FileMode.Create);
+                var formatter = new BinaryFormatter();
                 formatter.Serialize(outFile, this);
             }
             catch (IOException)
@@ -611,12 +721,18 @@ namespace ComputationalGraph
             }
         }
 
-        public static ComputationalGraph loadModel(string fileName)
+        /**
+         * <summary>Loads a computational graph model from the given file.</summary>
+         *
+         * <param name="fileName">Input file name.</param>
+         * <returns>Loaded computational graph if successful; otherwise, null.</returns>
+         */
+        public static ComputationalGraph LoadModel(string fileName)
         {
             try
             {
-                using FileStream inFile = new FileStream(fileName, FileMode.Open);
-                BinaryFormatter formatter = new BinaryFormatter();
+                using var inFile = new FileStream(fileName, FileMode.Open);
+                var formatter = new BinaryFormatter();
                 return (ComputationalGraph)formatter.Deserialize(inFile);
             }
             catch (IOException)

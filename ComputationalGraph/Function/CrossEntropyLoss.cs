@@ -7,14 +7,21 @@ namespace ComputationalGraph.Function
     [Serializable]
     public class CrossEntropyLoss : Logarithm
     {
-        public override ComputationalNode addEdge(List<ComputationalNode> inputNodes, bool isBiased)
+        /**
+         * <summary>Adds a cross-entropy loss edge to the computational graph.</summary>
+         *
+         * <param name="inputNodes">Input nodes of the loss function.</param>
+         * <param name="isBiased">Indicates whether the created node is biased.</param>
+         * <returns>The created computational node.</returns>
+         */
+        public override ComputationalNode AddEdge(List<ComputationalNode> inputNodes, bool isBiased)
         {
-            ComputationalNode logy = new FunctionNode(false, this);
-            inputNodes[0].add(logy);
+            var logy = new FunctionNode(false, this);
+            inputNodes[0].Add(logy);
 
-            ComputationalNode ylogy = new MultiplicationNode(false, isBiased, true);
-            inputNodes[1].add(ylogy);
-            logy.add(ylogy);
+            var ylogy = new MultiplicationNode(false, isBiased, true);
+            inputNodes[1].Add(ylogy);
+            logy.Add(ylogy);
 
             return ylogy;
         }

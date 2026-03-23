@@ -7,17 +7,24 @@ namespace ComputationalGraph.Function
     [Serializable]
     public class MeanSquaredErrorLoss : Negation
     {
-        public override ComputationalNode addEdge(List<ComputationalNode> inputNodes, bool isBiased)
+        /**
+         * <summary>Adds a mean squared error loss edge to the computational graph.</summary>
+         *
+         * <param name="inputNodes">Input nodes of the loss function.</param>
+         * <param name="isBiased">Indicates whether the created node is biased.</param>
+         * <returns>The created computational node.</returns>
+         */
+        public override ComputationalNode AddEdge(List<ComputationalNode> inputNodes, bool isBiased)
         {
-            ComputationalNode negatedY = new FunctionNode(false, this);
-            inputNodes[0].add(negatedY);
+            var negatedY = new FunctionNode(false, this);
+            inputNodes[0].Add(negatedY);
 
-            ComputationalNode yMinusNegatedY = new ComputationalNode();
-            negatedY.add(yMinusNegatedY);
-            inputNodes[1].add(yMinusNegatedY);
+            var yMinusNegatedY = new ComputationalNode();
+            negatedY.Add(yMinusNegatedY);
+            inputNodes[1].Add(yMinusNegatedY);
 
-            ComputationalNode newNode = new FunctionNode(isBiased, new Power());
-            yMinusNegatedY.add(newNode);
+            var newNode = new FunctionNode(isBiased, new Power());
+            yMinusNegatedY.Add(newNode);
 
             return newNode;
         }

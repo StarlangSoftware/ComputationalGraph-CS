@@ -6,52 +6,77 @@ namespace ComputationalGraph.Node
     [Serializable]
     public class FunctionNode : ComputationalNode
     {
-        private readonly CGFunction function;
+        private readonly CGFunction _function;
 
+        /**
+         * <summary>Creates a function node with the given bias flag and function.</summary>
+         *
+         * <param name="isBiased">Indicates whether the node is biased.</param>
+         * <param name="function">Function stored in the node.</param>
+         */
         public FunctionNode(bool isBiased, CGFunction function)
             : base(false, isBiased)
         {
-            this.function = function;
+            _function = function;
         }
 
+        /**
+         * <summary>Creates a function node with the given learnability, bias flag, and function.</summary>
+         *
+         * <param name="learnable">Indicates whether the node is learnable.</param>
+         * <param name="isBiased">Indicates whether the node is biased.</param>
+         * <param name="function">Function stored in the node.</param>
+         */
         public FunctionNode(bool learnable, bool isBiased, CGFunction function)
             : base(learnable, isBiased)
         {
-            this.function = function;
+            _function = function;
         }
 
+        /**
+         * <summary>Returns a string representation of the function node.</summary>
+         *
+         * <returns>A string representation of the function node.</returns>
+         */
         public override string ToString()
         {
-            string details = "";
+            var details = "";
 
-            if (function != null)
+            if (_function != null)
             {
-                details += "Function: " + function;
+                details += "Function: " + _function;
             }
 
-            if (value != null)
+            if (Value != null)
             {
+                var shape = Value.GetShape();
+
                 if (details.Length > 0)
                 {
                     details += ", ";
                 }
 
-                details += "Value Shape: [" + value.GetShape()[0];
-                for (int i = 1; i < value.GetShape().Length; i++)
+                details += "Value Shape: [" + shape[0];
+                for (var i = 1; i < shape.Length; i++)
                 {
-                    details += ", " + value.GetShape()[i];
+                    details += ", " + shape[i];
                 }
 
                 details += "]";
             }
 
-            details += ", is biased: " + isBiased;
+            details += ", is biased: " + IsBiased;
             return "FunctionNode(" + details + ")";
         }
 
-        public CGFunction getFunction()
+        /**
+         * <summary>Returns the function of the node.</summary>
+         *
+         * <returns>The function of the node.</returns>
+         */
+        public CGFunction GetFunction()
         {
-            return function;
+            return _function;
         }
     }
 }

@@ -8,100 +8,113 @@ namespace ComputationalGraph.Optimizer
     [Serializable]
     public class Adam : SGDMomentum
     {
-        private readonly Dictionary<ComputationalNode, double[]> momentumMap;
-        private readonly double beta2;
-        private readonly double epsilon;
-        private double currentBeta1;
-        private double currentBeta2;
+        private readonly Dictionary<ComputationalNode, double[]> _momentumMap;
+        private readonly double _beta2;
+        private readonly double _epsilon;
+        private double _currentBeta1;
+        private double _currentBeta2;
 
+        /**
+         * <summary>Creates an Adam optimizer with the given hyperparameters.</summary>
+         *
+         * <param name="learningRate">Initial learning rate.</param>
+         * <param name="etaDecrease">Learning rate decay factor.</param>
+         * <param name="beta1">Exponential decay rate for the first moment estimates.</param>
+         * <param name="beta2">Exponential decay rate for the second moment estimates.</param>
+         * <param name="epsilon">Small constant for numerical stability.</param>
+         */
         public Adam(double learningRate, double etaDecrease, double beta1, double beta2, double epsilon)
             : base(learningRate, etaDecrease, beta1)
         {
-            this.momentumMap = new Dictionary<ComputationalNode, double[]>();
-            this.beta2 = beta2;
-            this.epsilon = epsilon;
-            this.currentBeta1 = 1;
-            this.currentBeta2 = 1;
+            _momentumMap = new Dictionary<ComputationalNode, double[]>();
+            _beta2 = beta2;
+            _epsilon = epsilon;
+            _currentBeta1 = 1;
+            _currentBeta2 = 1;
         }
 
-        /// <summary>
-        /// Calculates the gradient updates using the Adam optimization algorithm.
-        /// </summary>
-        /// <param name="node">The node whose gradients are to be set.</param>
-        protected List<double> calculate(ComputationalNode node)
+        /**
+         * <summary>Calculates gradient updates using the Adam optimization algorithm.</summary>
+         *
+         * <param name="node">The node whose gradients are to be calculated.</param>
+         * <returns>A list of updated gradient values.</returns>
+         */
+        protected List<double> Calculate(ComputationalNode node)
         {
-            int backwardSize = ((List<double>)node.getBackward().GetData()).Count;
+            var backwardSize = ((List<double>)node.GetBackward().GetData()).Count;
 
-            List<double> newValuesMomentum = new List<double>(backwardSize);
-            List<double> newValuesVelocity = new List<double>(backwardSize);
+            var newValuesMomentum = new List<double>(backwardSize);
+            var newValuesVelocity = new List<double>(backwardSize);
 
-            for (int i = 0; i < backwardSize; i++)
+            for (var i = 0; i < backwardSize; i++)
             {
-                double backwardValue = ((List<double>)node.getBackward().GetData())[i];
-                newValuesMomentum.Add((1 - momentum) * backwardValue);
-                newValuesVelocity.Add((1 - beta2) * (backwardValue * backwardValue));
+                var backwardValue = ((List<double>)node.GetBackward().GetData())[i];
+                newValuesMomentum.Add((1 - Momentum) * backwardValue);
+                newValuesVelocity.Add((1 - _beta2) * (backwardValue * backwardValue));
             }
 
-            if (momentumMap.ContainsKey(node))
+            if (_momentumMap.ContainsKey(node))
             {
-                for (int i = 0; i < newValuesVelocity.Count; i++)
+                for (var i = 0; i < newValuesVelocity.Count; i++)
                 {
-                    newValuesVelocity[i] = newValuesVelocity[i] + beta2 * velocityMap[node][i];
-                    newValuesMomentum[i] = newValuesMomentum[i] + momentum * momentumMap[node][i];
+                    newValuesVelocity[i] = newValuesVelocity[i] + _beta2 * VelocityMap[node][i];
+                    newValuesMomentum[i] = newValuesMomentum[i] + Momentum * _momentumMap[node][i];
                 }
             }
 
-            double[] momentumValues = new double[backwardSize];
-            double[] velocityValues = new double[backwardSize];
+            var momentumValues = new double[backwardSize];
+            var velocityValues = new double[backwardSize];
 
-            for (int i = 0; i < backwardSize; i++)
+            for (var i = 0; i < backwardSize; i++)
             {
                 momentumValues[i] = newValuesMomentum[i];
                 velocityValues[i] = newValuesVelocity[i];
             }
 
-            momentumMap[node] = momentumValues;
-            velocityMap[node] = velocityValues;
+            _momentumMap[node] = momentumValues;
+            VelocityMap[node] = velocityValues;
 
-            for (int i = 0; i < newValuesMomentum.Count; i++)
+            for (var i = 0; i < newValuesMomentum.Count; i++)
             {
-                newValuesMomentum[i] = newValuesMomentum[i] / (1 - this.currentBeta1);
+                newValuesMomentum[i] = newValuesMomentum[i] / (1 - _currentBeta1);
             }
 
-            for (int i = 0; i < newValuesVelocity.Count; i++)
+            for (var i = 0; i < newValuesVelocity.Count; i++)
             {
-                newValuesVelocity[i] = newValuesVelocity[i] / (1 - this.currentBeta2);
+                newValuesVelocity[i] = newValuesVelocity[i] / (1 - _currentBeta2);
             }
 
-            List<double> newValues = new List<double>(newValuesMomentum.Count);
-            for (int i = 0; i < newValuesMomentum.Count; i++)
+            var newValues = new List<double>(newValuesMomentum.Count);
+            for (var i = 0; i < newValuesMomentum.Count; i++)
             {
                 newValues.Add(
-                    (newValuesMomentum[i] / (System.Math.Sqrt(newValuesVelocity[i]) + epsilon)) * learningRate
+                    (newValuesMomentum[i] / (System.Math.Sqrt(newValuesVelocity[i]) + _epsilon)) * LearningRate
                 );
             }
 
             return newValues;
         }
 
-        /// <summary>
-        /// Sets the gradients for the given node using the Adam optimization algorithm.
-        /// </summary>
-        /// <param name="node">The node whose gradients are to be set.</param>
-        protected override void setGradients(ComputationalNode node)
+        /**
+         * <summary>Sets the gradients for the given node using the Adam optimization algorithm.</summary>
+         *
+         * <param name="node">The node whose gradients are to be set.</param>
+         */
+        protected override void SetGradients(ComputationalNode node)
         {
-            node.setBackward(new Tensor(calculate(node), node.getBackward().GetShape()));
+            node.SetBackward(new Tensor(Calculate(node), node.GetBackward().GetShape()));
         }
 
-        /// <summary>
-        /// Updates the values of all learnable nodes and momentum values of the graph.
-        /// </summary>
-        /// <param name="leafNodes">input nodes of the graph.</param>
-        public override void updateValues(List<ComputationalNode> leafNodes)
+        /**
+         * <summary>Updates the values of all learnable nodes and Adam moment estimates.</summary>
+         *
+         * <param name="leafNodes">Input nodes of the graph.</param>
+         */
+        public override void UpdateValues(List<ComputationalNode> leafNodes)
         {
-            this.currentBeta1 *= momentum;
-            this.currentBeta2 *= beta2;
-            base.updateValues(leafNodes);
+            _currentBeta1 *= Momentum;
+            _currentBeta2 *= _beta2;
+            base.UpdateValues(leafNodes);
         }
     }
 }

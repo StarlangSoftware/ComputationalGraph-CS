@@ -8,33 +8,42 @@ namespace ComputationalGraph.Function
     [Serializable]
     public class ELU : Function
     {
-        private readonly double a;
+        private readonly double _a;
 
+        /**
+         * <summary>Creates an ELU activation function with the given alpha value.</summary>
+         *
+         * <param name="a">Alpha parameter of the ELU activation.</param>
+         */
         public ELU(double a)
         {
-            this.a = a;
+            _a = a;
         }
 
+        /**
+         * <summary>Creates an ELU activation function with the default alpha value.</summary>
+         */
         public ELU()
         {
-            this.a = 1.0;
+            _a = 1.0;
         }
 
-        /// <summary>
-        /// Computes the ELU activation for the given tensor.
-        /// </summary>
-        /// <param name="value">The tensor whose values are to be computed.</param>
-        /// <returns>ELU(x).</returns>
-        public Tensor calculate(Tensor value)
+        /**
+         * <summary>Computes the ELU activation for the given tensor.</summary>
+         *
+         * <param name="value">The tensor whose values are to be computed.</param>
+         * <returns>ELU(x).</returns>
+         */
+        public Tensor Calculate(Tensor value)
         {
-            List<double> values = new List<double>();
-            List<double> oldValues = (List<double>)value.GetData();
+            var values = new List<double>();
+            var oldValues = (List<double>)value.GetData();
 
-            foreach (double oldValue in oldValues)
+            foreach (var oldValue in oldValues)
             {
                 if (oldValue < 0)
                 {
-                    values.Add(a * (System.Math.Exp(oldValue) - 1));
+                    values.Add(_a * (System.Math.Exp(oldValue) - 1));
                 }
                 else
                 {
@@ -45,26 +54,27 @@ namespace ComputationalGraph.Function
             return new Tensor(values, value.GetShape());
         }
 
-        /// <summary>
-        /// Computes the derivative of the ELU activation function.
-        /// </summary>
-        /// <param name="value">output of the ELU(x).</param>
-        /// <param name="backward">Backward tensor.</param>
-        /// <returns>Gradient value of the corresponding node.</returns>
-        public Tensor derivative(Tensor value, Tensor backward)
+        /**
+         * <summary>Computes the derivative of the ELU activation function.</summary>
+         *
+         * <param name="value">Output of the ELU(x).</param>
+         * <param name="backward">Backward tensor.</param>
+         * <returns>Gradient value of the corresponding node.</returns>
+         */
+        public Tensor Derivative(Tensor value, Tensor backward)
         {
-            List<double> values = new List<double>();
-            List<double> oldValues = (List<double>)value.GetData();
-            List<double> backwardValues = (List<double>)backward.GetData();
+            var values = new List<double>();
+            var oldValues = (List<double>)value.GetData();
+            var backwardValues = (List<double>)backward.GetData();
 
-            for (int i = 0; i < oldValues.Count; i++)
+            for (var i = 0; i < oldValues.Count; i++)
             {
-                double oldValue = oldValues[i];
-                double backwardValue = backwardValues[i];
+                var oldValue = oldValues[i];
+                var backwardValue = backwardValues[i];
 
                 if (oldValue < 0)
                 {
-                    values.Add((oldValue + a) * backwardValue);
+                    values.Add((oldValue + _a) * backwardValue);
                 }
                 else
                 {
@@ -75,10 +85,17 @@ namespace ComputationalGraph.Function
             return new Tensor(values, value.GetShape());
         }
 
-        public ComputationalNode addEdge(List<ComputationalNode> inputNodes, bool isBiased)
+        /**
+         * <summary>Adds an ELU function edge to the computational graph.</summary>
+         *
+         * <param name="inputNodes">Input nodes of the function.</param>
+         * <param name="isBiased">Indicates whether the created node is biased.</param>
+         * <returns>The created computational node.</returns>
+         */
+        public ComputationalNode AddEdge(List<ComputationalNode> inputNodes, bool isBiased)
         {
-            ComputationalNode newNode = new FunctionNode(isBiased, this);
-            inputNodes[0].add(newNode);
+            var newNode = new FunctionNode(isBiased, this);
+            inputNodes[0].Add(newNode);
             return newNode;
         }
     }

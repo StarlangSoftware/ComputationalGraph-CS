@@ -8,12 +8,18 @@ namespace ComputationalGraph.Function
     [Serializable]
     public class Tanh : Function
     {
-        public Tensor calculate(Tensor value)
+        /**
+         * <summary>Computes the hyperbolic tangent activation for the given tensor.</summary>
+         *
+         * <param name="value">The tensor whose values are to be computed.</param>
+         * <returns>Tanh(x).</returns>
+         */
+        public Tensor Calculate(Tensor value)
         {
-            List<double> values = new List<double>();
-            List<double> oldValues = (List<double>)value.GetData();
+            var values = new List<double>();
+            var oldValues = (List<double>)value.GetData();
 
-            foreach (double oldValue in oldValues)
+            foreach (var oldValue in oldValues)
             {
                 values.Add(System.Math.Tanh(oldValue));
             }
@@ -21,26 +27,40 @@ namespace ComputationalGraph.Function
             return new Tensor(values, value.GetShape());
         }
 
-        public Tensor derivative(Tensor value, Tensor backward)
+        /**
+         * <summary>Computes the derivative of the hyperbolic tangent activation function.</summary>
+         *
+         * <param name="value">Output of the tanh function.</param>
+         * <param name="backward">Backward tensor.</param>
+         * <returns>Gradient value of the corresponding node.</returns>
+         */
+        public Tensor Derivative(Tensor value, Tensor backward)
         {
-            List<double> values = new List<double>();
-            List<double> oldValues = (List<double>)value.GetData();
-            List<double> backwardValues = (List<double>)backward.GetData();
+            var values = new List<double>();
+            var oldValues = (List<double>)value.GetData();
+            var backwardValues = (List<double>)backward.GetData();
 
-            for (int i = 0; i < oldValues.Count; i++)
+            for (var i = 0; i < oldValues.Count; i++)
             {
-                double oldValue = oldValues[i];
-                double backwardValue = backwardValues[i];
+                var oldValue = oldValues[i];
+                var backwardValue = backwardValues[i];
                 values.Add((1 - oldValue * oldValue) * backwardValue);
             }
 
             return new Tensor(values, value.GetShape());
         }
 
-        public virtual ComputationalNode addEdge(List<ComputationalNode> inputNodes, bool isBiased)
+        /**
+         * <summary>Adds a tanh function edge to the computational graph.</summary>
+         *
+         * <param name="inputNodes">Input nodes of the function.</param>
+         * <param name="isBiased">Indicates whether the created node is biased.</param>
+         * <returns>The created computational node.</returns>
+         */
+        public virtual ComputationalNode AddEdge(List<ComputationalNode> inputNodes, bool isBiased)
         {
-            ComputationalNode newNode = new FunctionNode(isBiased, this);
-            inputNodes[0].add(newNode);
+            var newNode = new FunctionNode(isBiased, this);
+            inputNodes[0].Add(newNode);
             return newNode;
         }
     }

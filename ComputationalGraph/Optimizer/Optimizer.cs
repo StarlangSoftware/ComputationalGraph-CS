@@ -8,42 +8,49 @@ namespace ComputationalGraph.Optimizer
     [Serializable]
     public abstract class Optimizer
     {
-        protected double learningRate;
-        private readonly double etaDecrease;
+        protected double LearningRate;
+        private readonly double _etaDecrease;
 
+        /**
+         * <summary>Creates an optimizer with the given learning rate and decay factor.</summary>
+         *
+         * <param name="learningRate">Initial learning rate.</param>
+         * <param name="etaDecrease">Learning rate decay factor.</param>
+         */
         public Optimizer(double learningRate, double etaDecrease)
         {
-            this.learningRate = learningRate;
-            this.etaDecrease = etaDecrease;
+            LearningRate = learningRate;
+            _etaDecrease = etaDecrease;
         }
 
-        /// <summary>
-        /// Updates the learning rate of the optimizer.
-        /// </summary>
-        public virtual void setLearningRate()
+        /**
+         * <summary>Updates the learning rate of the optimizer.</summary>
+         */
+        public virtual void SetLearningRate()
         {
-            this.learningRate *= this.etaDecrease;
+            LearningRate *= _etaDecrease;
         }
 
-        /// <summary>
-        /// Checks if broadcasting be applied to the corresponding node.
-        /// </summary>
-        /// <param name="node">The node to check.</param>
-        /// <returns>
-        /// The index of the dimension where broadcasting is to be applied.
-        /// -1 if broadcasting is not to be applied.
-        /// </returns>
-        private int broadcast(ComputationalNode node)
+        /**
+         * <summary>Checks if broadcasting should be applied to the corresponding node.</summary>
+         *
+         * <param name="node">The node to check.</param>
+         * <returns>
+         * The index of the dimension where broadcasting is to be applied,
+         * or -1 if broadcasting is not to be applied.
+         * </returns>
+         */
+        private int Broadcast(ComputationalNode node)
         {
-            int[] v = node.getValue().GetShape();
-            int[] b = node.getBackward().GetShape();
-            int index = -1;
+            var valueShape = node.GetValue().GetShape();
+            var backwardShape = node.GetBackward().GetShape();
+            var index = -1;
 
-            for (int i = 0; i < v.Length; i++)
+            for (var i = 0; i < valueShape.Length; i++)
             {
-                if (v[i] != b[i])
+                if (valueShape[i] != backwardShape[i])
                 {
-                    if (v[i] == 1)
+                    if (valueShape[i] == 1)
                     {
                         if (index != -1)
                         {
@@ -54,7 +61,7 @@ namespace ComputationalGraph.Optimizer
                     }
                     else
                     {
-                        throw new ArgumentException("Value and Backward shapes are not compatible");
+                        throw new ArgumentException("Value and backward shapes are not compatible");
                     }
                 }
             }
@@ -62,85 +69,88 @@ namespace ComputationalGraph.Optimizer
             return index;
         }
 
-        /// <summary>
-        /// Recursive helper function to update the values of learnable nodes.
-        /// </summary>
-        /// <param name="visited">A set of visited nodes.</param>
-        /// <param name="node">The current node being processed.</param>
-        private void updateRecursive(HashSet<ComputationalNode> visited, ComputationalNode node)
+        /**
+         * <summary>Recursively updates the values of learnable nodes.</summary>
+         *
+         * <param name="visited">A set of visited nodes.</param>
+         * <param name="node">The current node being processed.</param>
+         */
+        private void UpdateRecursive(HashSet<ComputationalNode> visited, ComputationalNode node)
         {
             visited.Add(node);
 
-            if (node.isLearnable())
+            if (node.IsLearnable())
             {
-                int index = broadcast(node);
+                var index = Broadcast(node);
 
                 if (index != -1)
                 {
-                    int v = 1;
-                    int b = 1;
+                    var valueBlockSize = 1;
+                    var backwardBlockSize = 1;
 
-                    for (int i = node.getValue().GetShape().Length - 1; i >= index; i--)
+                    for (var i = node.GetValue().GetShape().Length - 1; i >= index; i--)
                     {
-                        v *= node.getValue().GetShape()[i];
-                        b *= node.getBackward().GetShape()[i];
+                        valueBlockSize *= node.GetValue().GetShape()[i];
+                        backwardBlockSize *= node.GetBackward().GetShape()[i];
                     }
 
-                    List<double> backwardValues = (List<double>)node.getBackward().GetData();
-                    double[] values = new double[((List<double>)node.getValue().GetData()).Count];
+                    var backwardValues = (List<double>)node.GetBackward().GetData();
+                    var values = new double[((List<double>)node.GetValue().GetData()).Count];
 
-                    for (int i = 0; i < backwardValues.Count; i++)
+                    for (var i = 0; i < backwardValues.Count; i++)
                     {
-                        for (int j = i; j < i + b; j++)
+                        for (var j = i; j < i + backwardBlockSize; j++)
                         {
-                            values[((j - i) % v) + v * (j / b)] += backwardValues[j];
+                            values[((j - i) % valueBlockSize) + valueBlockSize * (j / backwardBlockSize)] += backwardValues[j];
                         }
 
-                        i += b - 1;
+                        i += backwardBlockSize - 1;
                     }
 
-                    List<double> list = new List<double>();
-                    foreach (double d in values)
+                    var list = new List<double>();
+                    foreach (var value in values)
                     {
-                        list.Add(d);
+                        list.Add(value);
                     }
 
-                    node.setBackward(new Tensor(list, node.getValue().GetShape()));
+                    node.SetBackward(new Tensor(list, node.GetValue().GetShape()));
                 }
 
-                this.setGradients(node);
-                node.updateValue();
+                SetGradients(node);
+                node.UpdateValue();
             }
 
-            for (int t = 0; t < node.childrenSize(); t++)
+            for (var t = 0; t < node.ChildrenSize(); t++)
             {
-                ComputationalNode child = node.getChild(t);
+                var child = node.GetChild(t);
                 if (!visited.Contains(child))
                 {
-                    updateRecursive(visited, child);
+                    UpdateRecursive(visited, child);
                 }
             }
         }
 
-        /// <summary>
-        /// Sets the gradients (backward values) of the node.
-        /// </summary>
-        /// <param name="node">The node whose gradients are to be set.</param>
-        protected abstract void setGradients(ComputationalNode node);
+        /**
+         * <summary>Sets the gradients of the given node.</summary>
+         *
+         * <param name="node">The node whose gradients are to be set.</param>
+         */
+        protected abstract void SetGradients(ComputationalNode node);
 
-        /// <summary>
-        /// Updates the values of all learnable nodes in the graph.
-        /// </summary>
-        /// <param name="leafNodes">input nodes of the graph.</param>
-        public virtual void updateValues(List<ComputationalNode> leafNodes)
+        /**
+         * <summary>Updates the values of all learnable nodes in the graph.</summary>
+         *
+         * <param name="leafNodes">Input nodes of the graph.</param>
+         */
+        public virtual void UpdateValues(List<ComputationalNode> leafNodes)
         {
-            HashSet<ComputationalNode> visited = new HashSet<ComputationalNode>();
+            var visited = new HashSet<ComputationalNode>();
 
-            foreach (ComputationalNode node in leafNodes)
+            foreach (var node in leafNodes)
             {
                 if (!visited.Contains(node))
                 {
-                    updateRecursive(visited, node);
+                    UpdateRecursive(visited, node);
                 }
             }
         }

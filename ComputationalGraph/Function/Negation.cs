@@ -8,17 +8,18 @@ namespace ComputationalGraph.Function
     [Serializable]
     public class Negation : Function
     {
-        /// <summary>
-        /// Negates the values of the given tensor.
-        /// </summary>
-        /// <param name="value">The tensor whose values are to be negated.</param>
-        /// <returns>The negated tensor.</returns>
-        public Tensor calculate(Tensor value)
+        /**
+         * <summary>Negates the values of the given tensor.</summary>
+         *
+         * <param name="value">The tensor whose values are to be negated.</param>
+         * <returns>The negated tensor.</returns>
+         */
+        public Tensor Calculate(Tensor value)
         {
-            List<double> values = new List<double>();
-            List<double> oldValues = (List<double>)value.GetData();
+            var values = new List<double>();
+            var oldValues = (List<double>)value.GetData();
 
-            foreach (double oldValue in oldValues)
+            foreach (var oldValue in oldValues)
             {
                 values.Add(-oldValue);
             }
@@ -26,18 +27,19 @@ namespace ComputationalGraph.Function
             return new Tensor(values, value.GetShape());
         }
 
-        /// <summary>
-        /// Calculates the derivative of the Negation function.
-        /// </summary>
-        /// <param name="value">output of the Negation function.</param>
-        /// <param name="backward">Backward tensor.</param>
-        /// <returns>Gradient value of the corresponding node.</returns>
-        public Tensor derivative(Tensor value, Tensor backward)
+        /**
+         * <summary>Calculates the derivative of the negation function.</summary>
+         *
+         * <param name="value">Output of the negation function.</param>
+         * <param name="backward">Backward tensor.</param>
+         * <returns>Gradient value of the corresponding node.</returns>
+         */
+        public Tensor Derivative(Tensor value, Tensor backward)
         {
-            List<double> values = new List<double>();
-            List<double> backwardValues = (List<double>)backward.GetData();
+            var values = new List<double>();
+            var backwardValues = (List<double>)backward.GetData();
 
-            foreach (double backwardValue in backwardValues)
+            foreach (var backwardValue in backwardValues)
             {
                 values.Add(-backwardValue);
             }
@@ -45,10 +47,17 @@ namespace ComputationalGraph.Function
             return new Tensor(values, value.GetShape());
         }
 
-        public virtual ComputationalNode addEdge(List<ComputationalNode> inputNodes, bool isBiased)
+        /**
+         * <summary>Adds a negation function edge to the computational graph.</summary>
+         *
+         * <param name="inputNodes">Input nodes of the function.</param>
+         * <param name="isBiased">Indicates whether the created node is biased.</param>
+         * <returns>The created computational node.</returns>
+         */
+        public virtual ComputationalNode AddEdge(List<ComputationalNode> inputNodes, bool isBiased)
         {
-            ComputationalNode newNode = new FunctionNode(isBiased, this);
-            inputNodes[0].add(newNode);
+            var newNode = new FunctionNode(isBiased, this);
+            inputNodes[0].Add(newNode);
             return newNode;
         }
     }
